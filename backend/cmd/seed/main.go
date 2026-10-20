@@ -11,6 +11,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
+	"github.com/zbekxzz/gulder/backend/internal/auth"
 	"github.com/zbekxzz/gulder/backend/internal/catalog"
 	"github.com/zbekxzz/gulder/backend/internal/config"
 	"github.com/zbekxzz/gulder/backend/internal/store"
@@ -39,15 +40,22 @@ func run() error {
 	defer st.Close()
 
 	var rep catalog.SeedReport
+	users := 0
 	err = st.InTx(ctx, func(tx pgx.Tx) error {
 		var err error
-		rep, err = catalog.Seed(ctx, tx, *dataDir)
+		if rep, err = catalog.Seed(ctx, tx, *dataDir); err != nil {
+			return err
+		}
+		// §14: пользователи на каждую роль — только в dev
+		if cfg.IsDev() {
+			users, err = auth.SeedDevUsers(ctx, tx)
+		}
 		return err
 	})
 	if err != nil {
 		return err
 	}
 	slog.Info("seed done", "taxa", rep.Taxa, "shops", rep.Shops, "flowers", rep.Flowers,
-		"bouquets", rep.Bouquets, "gifts", rep.Gifts, "numerology_rows", rep.NumerologyRows)
+		"bouquets", rep.Bouquets, "gifts", rep.Gifts, "numerology_rows", rep.NumerologyRows, "dev_users", users)
 	return nil
 }

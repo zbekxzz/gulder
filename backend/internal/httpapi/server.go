@@ -9,15 +9,17 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
 
+	"github.com/zbekxzz/gulder/backend/internal/auth"
 	"github.com/zbekxzz/gulder/backend/internal/config"
 	"github.com/zbekxzz/gulder/backend/internal/store"
 )
 
 // Server собирает зависимости хендлеров.
 type Server struct {
-	cfg   config.Config
-	store *store.Store
-	now   func() time.Time
+	cfg    config.Config
+	store  *store.Store
+	issuer *auth.Issuer
+	now    func() time.Time
 }
 
 // Option настраивает Server (для тестов).
@@ -28,7 +30,7 @@ func WithClock(now func() time.Time) Option { return func(s *Server) { s.now = n
 
 // New создаёт сервер.
 func New(cfg config.Config, st *store.Store, opts ...Option) *Server {
-	s := &Server{cfg: cfg, store: st, now: time.Now}
+	s := &Server{cfg: cfg, store: st, now: time.Now, issuer: auth.NewIssuer(cfg.JWTSecret, cfg.AccessTokenTTL, cfg.RefreshTokenTTL)}
 	for _, o := range opts {
 		o(s)
 	}
@@ -53,6 +55,45 @@ func (s *Server) Router() http.Handler {
 
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Get("/healthz", s.healthz)
+		r.Get("/shops", s.listShops)
+
+		r.Post("/auth/register", s.register)
+		r.Post("/auth/login", s.login)
+		r.Post("/auth/refresh", s.refresh)
+
+		r.Group(func(r chi.Router) {
+			r.Use(s.authenticate)
+			r.Get("/me", s.me)
+
+			// Даритель (FR-P01–P03, FR-O01)
+			r.Group(func(r chi.Router) {
+				r.Use(requireRole(auth.RoleGiver))
+				r.Post("/recipients", s.createRecipient)
+				r.Get("/recipients", s.listRecipients)
+				r.Get("/recipients/{id}", s.getRecipient)
+				r.Put("/recipients/{id}", s.updateRecipient)
+				r.Delete("/recipients/{id}", s.deleteRecipient)
+				r.Get("/recipients/{id}/occasions", s.listRecipientOccasions)
+				r.Post("/occasions", s.createOccasion)
+				r.Get("/occasions/{id}", s.getOccasion)
+			})
+
+			// Флорист (FR-C01–C05)
+			r.Group(func(r chi.Router) {
+				r.Use(requireRole(auth.RoleFlorist))
+				r.Post("/catalog/import", s.importCatalog)
+				r.Get("/catalog/bouquets", s.listShopBouquets)
+				r.Get("/catalog/gifts", s.listShopGifts)
+				r.Get("/catalog/flowers", s.listFlowers)
+				r.Put("/catalog/flowers/{id}/taxon", s.confirmFlowerTaxon)
+				r.Put("/availability/{id}", s.updateAvailability)
+			})
+
+			r.Group(func(r chi.Router) {
+				r.Use(requireRole(auth.RoleFlorist, auth.RoleManager))
+				r.Get("/catalog/taxa", s.listTaxa)
+			})
+		})
 
 		// P1 (релиз 2.0): контракт заложен, реализация после M8 (§6).
 		r.Post("/recipients/{id}/invites", s.notImplemented)
