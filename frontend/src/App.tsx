@@ -1,10 +1,18 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { RouterProvider } from "react-router-dom";
+import { AuthProvider } from "./features/auth/AuthContext";
+import { router } from "./routes";
+
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } },
+});
+
 export function App() {
   return (
-    <main className="mx-auto max-w-3xl p-6">
-      <h1 className="text-2xl font-semibold text-brand-700">Gulder</h1>
-      <p className="mt-2 text-stone-600">
-        Подбор букета и подарков с учётом аллергий, питомцев и бюджета.
-      </p>
-    </main>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <RouterProvider router={router} />
+      </AuthProvider>
+    </QueryClientProvider>
   );
 }
