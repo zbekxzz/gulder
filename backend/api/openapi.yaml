@@ -367,6 +367,100 @@ paths:
         "204": { description: Обновлено }
         "404": { $ref: "#/components/responses/Error" }
         "422": { $ref: "#/components/responses/Error" }
+  /recommendations:
+    post:
+      summary: Top-5 букетов с причинами, уточняющим вопросом и run_id (FR-R01–R04, §8.2)
+      operationId: createRecommendations
+      tags: [giver]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [occasion_id]
+              properties:
+                occasion_id: { type: integer, format: int64 }
+                filters:
+                  type: object
+                  properties:
+                    nearby: { type: boolean }
+                    cheaper: { type: boolean }
+                    discount: { type: boolean }
+      responses:
+        "201":
+          description: Запуск рекомендаций
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RecommendationRun" }
+        "404": { $ref: "#/components/responses/Error" }
+        "422": { $ref: "#/components/responses/Error" }
+  /recommendations/{id}:
+    parameters: [{ $ref: "#/components/parameters/Id" }]
+    get:
+      summary: Сохранённый запуск
+      operationId: getRecommendations
+      tags: [giver]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RecommendationRun" }
+        "404": { $ref: "#/components/responses/Error" }
+  /recipients/{id}/recommendations:
+    parameters: [{ $ref: "#/components/parameters/Id" }]
+    get:
+      summary: История рекомендаций получателя
+      operationId: listRecipientRecommendations
+      tags: [giver]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items: { type: array, items: { $ref: "#/components/schemas/RecommendationRun" } }
+  /admin/numerology:
+    get:
+      summary: Активная таблица нумерологии и история версий (FR-N03)
+      operationId: getNumerology
+      tags: [manager]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [active, versions, label]
+                properties:
+                  active: { oneOf: [{ $ref: "#/components/schemas/NumerologyVersion" }, { type: "null" }] }
+                  versions: { type: array, items: { $ref: "#/components/schemas/NumerologyVersion" } }
+                  label: { type: string }
+    put:
+      summary: Новая версия таблицы нумерологии, становится активной (FR-N03)
+      operationId: putNumerology
+      tags: [manager]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [rows]
+              properties:
+                rows: { type: array, items: { $ref: "#/components/schemas/NumerologyRow" } }
+      responses:
+        "200":
+          description: Создана версия
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/NumerologyVersion" }
+        "422": { $ref: "#/components/responses/Error" }
   /recipients/{id}/invites:
     post:
       summary: "P1: приглашение получателя (FR-P04)"
@@ -633,6 +727,105 @@ components:
         image_license: { type: [string, "null"] }
         image_author: { type: [string, "null"] }
         verified: { type: boolean }
+    GiverReason:
+      type: object
+      required: [code, message]
+      description: Причина для дарителя; ограничения, указанные получателем, — только RECIPIENT_RESTRICTION
+      properties:
+        code: { type: string }
+        message: { type: string }
+    ShopRef:
+      type: object
+      required: [id, name, address, distance_m, open_now]
+      properties:
+        id: { type: integer, format: int64 }
+        name: { type: string }
+        address: { type: string }
+        distance_m: { type: [number, "null"] }
+        open_now: { type: boolean }
+    CardItem:
+      type: object
+      required: [flower_id, trade_name, color, stems, genus, scent, toxic_for]
+      properties:
+        flower_id: { type: integer, format: int64 }
+        trade_name: { type: string }
+        color: { type: string }
+        stems: { type: integer }
+        genus: { type: string }
+        scent: { type: string }
+        toxic_for: { type: array, items: { type: string } }
+        image_url: { type: string }
+        image_license: { type: string }
+        image_author: { type: string }
+    NumerologyCard:
+      type: object
+      required: [number, meaning, label]
+      properties:
+        number: { type: integer }
+        meaning: { type: string }
+        label: { type: string, description: «развлекательная функция» }
+    RecommendationCard:
+      type: object
+      required: [bouquet_id, rank, name, style, composition_format, score, confidence, reasons, conflicts, missing_info, warnings, numerology, shop, price, discount_price, discount_until, in_stock, items]
+      properties:
+        bouquet_id: { type: integer, format: int64 }
+        rank: { type: integer }
+        name: { type: string }
+        style: { type: string }
+        composition_format: { type: string }
+        image_url: { type: string }
+        score: { type: number }
+        confidence: { type: number }
+        reasons: { type: array, items: { type: string } }
+        conflicts: { type: array, items: { type: string } }
+        missing_info: { type: array, items: { type: string } }
+        warnings: { type: array, items: { $ref: "#/components/schemas/GiverReason" } }
+        numerology: { oneOf: [{ $ref: "#/components/schemas/NumerologyCard" }, { type: "null" }] }
+        shop: { $ref: "#/components/schemas/ShopRef" }
+        price: { $ref: "#/components/schemas/Money" }
+        discount_price: { oneOf: [{ $ref: "#/components/schemas/Money" }, { type: "null" }] }
+        discount_until: { type: [string, "null"], format: date-time }
+        in_stock: { type: boolean }
+        items: { type: array, items: { $ref: "#/components/schemas/CardItem" } }
+    ClarifyingQuestion:
+      type: object
+      required: [attribute, text]
+      properties:
+        attribute: { type: string, enum: [allergies, pets, asthma, scent_sensitivity] }
+        text: { type: string }
+    RecommendationRun:
+      type: object
+      required: [run_id, occasion_id, recipient_id, model_version, rules_version, numerology_used, filters, items, clarifying_question, excluded_count, created_at]
+      properties:
+        run_id: { type: integer, format: int64 }
+        occasion_id: { type: integer, format: int64 }
+        recipient_id: { type: integer, format: int64 }
+        model_version: { type: string }
+        rules_version: { type: string }
+        numerology_used: { type: boolean }
+        filters: { type: object, additionalProperties: true }
+        items: { type: array, items: { $ref: "#/components/schemas/RecommendationCard" } }
+        clarifying_question: { oneOf: [{ $ref: "#/components/schemas/ClarifyingQuestion" }, { type: "null" }] }
+        excluded_count: { type: integer, description: Сколько букетов исключил Rules Engine }
+        created_at: { type: string, format: date-time }
+    NumerologyRow:
+      type: object
+      required: [number, flowers, colors, meaning]
+      properties:
+        number: { type: integer, enum: [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 22, 33] }
+        flowers: { type: array, items: { type: string } }
+        colors: { type: array, items: { type: string } }
+        meaning: { type: string }
+    NumerologyVersion:
+      type: object
+      required: [id, version, is_active, created_by, created_at]
+      properties:
+        id: { type: integer, format: int64 }
+        version: { type: integer }
+        is_active: { type: boolean }
+        created_by: { type: [integer, "null"], format: int64 }
+        created_at: { type: string, format: date-time }
+        rows: { type: array, items: { $ref: "#/components/schemas/NumerologyRow" } }
     Status:
       type: object
       required: [status]

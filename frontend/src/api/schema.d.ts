@@ -323,6 +323,79 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/recommendations": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Top-5 букетов с причинами, уточняющим вопросом и run_id (FR-R01–R04, §8.2) */
+    post: operations["createRecommendations"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/recommendations/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: components["parameters"]["Id"];
+      };
+      cookie?: never;
+    };
+    /** Сохранённый запуск */
+    get: operations["getRecommendations"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/recipients/{id}/recommendations": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: components["parameters"]["Id"];
+      };
+      cookie?: never;
+    };
+    /** История рекомендаций получателя */
+    get: operations["listRecipientRecommendations"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/admin/numerology": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Активная таблица нумерологии и история версий (FR-N03) */
+    get: operations["getNumerology"];
+    /** Новая версия таблицы нумерологии, становится активной (FR-N03) */
+    put: operations["putNumerology"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/recipients/{id}/invites": {
     parameters: {
       query?: never;
@@ -615,6 +688,104 @@ export interface components {
       image_license: string | null;
       image_author: string | null;
       verified: boolean;
+    };
+    /** @description Причина для дарителя; ограничения, указанные получателем, — только RECIPIENT_RESTRICTION */
+    GiverReason: {
+      code: string;
+      message: string;
+    };
+    ShopRef: {
+      /** Format: int64 */
+      id: number;
+      name: string;
+      address: string;
+      distance_m: number | null;
+      open_now: boolean;
+    };
+    CardItem: {
+      /** Format: int64 */
+      flower_id: number;
+      trade_name: string;
+      color: string;
+      stems: number;
+      genus: string;
+      scent: string;
+      toxic_for: string[];
+      image_url?: string;
+      image_license?: string;
+      image_author?: string;
+    };
+    NumerologyCard: {
+      number: number;
+      meaning: string;
+      /** @description «развлекательная функция» */
+      label: string;
+    };
+    RecommendationCard: {
+      /** Format: int64 */
+      bouquet_id: number;
+      rank: number;
+      name: string;
+      style: string;
+      composition_format: string;
+      image_url?: string;
+      score: number;
+      confidence: number;
+      reasons: string[];
+      conflicts: string[];
+      missing_info: string[];
+      warnings: components["schemas"]["GiverReason"][];
+      numerology: components["schemas"]["NumerologyCard"] | null;
+      shop: components["schemas"]["ShopRef"];
+      price: components["schemas"]["Money"];
+      discount_price: components["schemas"]["Money"] | null;
+      /** Format: date-time */
+      discount_until: string | null;
+      in_stock: boolean;
+      items: components["schemas"]["CardItem"][];
+    };
+    ClarifyingQuestion: {
+      /** @enum {string} */
+      attribute: "allergies" | "pets" | "asthma" | "scent_sensitivity";
+      text: string;
+    };
+    RecommendationRun: {
+      /** Format: int64 */
+      run_id: number;
+      /** Format: int64 */
+      occasion_id: number;
+      /** Format: int64 */
+      recipient_id: number;
+      model_version: string;
+      rules_version: string;
+      numerology_used: boolean;
+      filters: {
+        [key: string]: unknown;
+      };
+      items: components["schemas"]["RecommendationCard"][];
+      clarifying_question: components["schemas"]["ClarifyingQuestion"] | null;
+      /** @description Сколько букетов исключил Rules Engine */
+      excluded_count: number;
+      /** Format: date-time */
+      created_at: string;
+    };
+    NumerologyRow: {
+      /** @enum {integer} */
+      number: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 11 | 22 | 33;
+      flowers: string[];
+      colors: string[];
+      meaning: string;
+    };
+    NumerologyVersion: {
+      /** Format: int64 */
+      id: number;
+      version: number;
+      is_active: boolean;
+      /** Format: int64 */
+      created_by: number | null;
+      /** Format: date-time */
+      created_at: string;
+      rows?: components["schemas"]["NumerologyRow"][];
     };
     Status: {
       status: string;
@@ -1172,6 +1343,138 @@ export interface operations {
         content?: never;
       };
       404: components["responses"]["Error"];
+      422: components["responses"]["Error"];
+    };
+  };
+  createRecommendations: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** Format: int64 */
+          occasion_id: number;
+          filters?: {
+            nearby?: boolean;
+            cheaper?: boolean;
+            discount?: boolean;
+          };
+        };
+      };
+    };
+    responses: {
+      /** @description Запуск рекомендаций */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RecommendationRun"];
+        };
+      };
+      404: components["responses"]["Error"];
+      422: components["responses"]["Error"];
+    };
+  };
+  getRecommendations: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: components["parameters"]["Id"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RecommendationRun"];
+        };
+      };
+      404: components["responses"]["Error"];
+    };
+  };
+  listRecipientRecommendations: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: components["parameters"]["Id"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            items: components["schemas"]["RecommendationRun"][];
+          };
+        };
+      };
+    };
+  };
+  getNumerology: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            active: components["schemas"]["NumerologyVersion"] | null;
+            versions: components["schemas"]["NumerologyVersion"][];
+            label: string;
+          };
+        };
+      };
+    };
+  };
+  putNumerology: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          rows: components["schemas"]["NumerologyRow"][];
+        };
+      };
+    };
+    responses: {
+      /** @description Создана версия */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["NumerologyVersion"];
+        };
+      };
       422: components["responses"]["Error"];
     };
   };

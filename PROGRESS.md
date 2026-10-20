@@ -48,6 +48,21 @@
 - Покрытие `internal/rules` — 100% (CI требует ≥ 90%).
 - ADR 0005: трактовки спецификации правил.
 
+## M3. Рекомендации — закрыта (тег `m3`)
+
+Сделано:
+- `catalog.LoadSnapshot`: каталог в доменных типах с эффективной ценой (скидка, если действует).
+- `internal/ranking`: baseline-ranker по §8.1 (веса в `ranking.yaml`, версия `baseline-0.1`), усиление нейтральности
+  при неизвестных полях (FR-R02), confidence = база × множитель Rules Engine, причины и конфликты (FR-R03),
+  разнообразие Top-5 (≤ 2 на магазин, ≤ 3 на доминирующий род), нумерология (FR-N02, вес ≤ 15%).
+- `internal/recommend`: повод → профиль → каталог → `FilterCandidates` (до ranker'а) → Top-5 → карточки через GiverView
+  → уточняющий вопрос (FR-R04) → запись `recommendation_runs` в одной транзакции (`numerology_used`, `numerology_version_id`).
+- API: `POST /recommendations`, `GET /recommendations/{id}`, `GET /recipients/{id}/recommendations`,
+  `GET/PUT /admin/numerology` (версии + audit).
+- Тесты: AC-1 по HTTP (одинаковые вкусы, разные ограничения → разные Top-5), AC-7, FR-N02 (11/22/33),
+  GiverView на уровне HTTP (ответ не содержит аллергенов и нелюбимого получателем), объяснимость карточек.
+- ADR 0006.
+
 ## Открытые вопросы
 1. **Docker / CI.** Локально Docker не установлен, поэтому `docker compose` и GitHub Actions не запускались.
    Нужно запушить репозиторий на GitHub и убедиться, что CI зелёный.

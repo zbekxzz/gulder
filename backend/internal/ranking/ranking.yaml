@@ -1,0 +1,18 @@
+# Веса baseline-ranker'а (§8.1). Версия весов = model_version в recommendation_runs.
+# Меняя веса, увеличивайте model_version, иначе запуски нельзя будет сравнить (RM-04).
+model_version: baseline-0.1
+weights:
+  flower_match: 0.25
+  color_match: 0.15
+  occasion_fit: 0.20
+  style_format: 0.10
+  budget_fit: 0.15
+  season_avail: 0.10
+  neutrality: 0.05
+# FR-R02: w_neutral = neutrality + neutrality_per_unknown × число неизвестных полей безопасности
+# (allergies, pets, asthma, scent_sensitivity), затем веса перенормируются.
+neutrality_per_unknown: 0.05
+# FR-N04: вес нумерологии ≤ 0.15; остальные веса масштабируются на (1 − w).
+numerology_weight: 0.10
+# Platt-калибровка confidence: sigmoid(a·x + b). Пусто — без калибровки (M6).
+calibration: null

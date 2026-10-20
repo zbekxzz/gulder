@@ -14,6 +14,7 @@ import (
 
 	"github.com/zbekxzz/gulder/backend/internal/config"
 	"github.com/zbekxzz/gulder/backend/internal/httpapi"
+	"github.com/zbekxzz/gulder/backend/internal/ranking"
 	"github.com/zbekxzz/gulder/backend/internal/store"
 )
 
@@ -34,6 +35,10 @@ func run() error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
+	rankCfg, err := ranking.LoadConfig(cfg.RankingConfig)
+	if err != nil {
+		return err
+	}
 	st, err := store.Open(ctx, cfg.DatabaseURL)
 	if err != nil {
 		return err
@@ -42,7 +47,7 @@ func run() error {
 
 	srv := &http.Server{
 		Addr:              cfg.HTTPAddr,
-		Handler:           httpapi.New(cfg, st).Router(),
+		Handler:           httpapi.New(cfg, st, httpapi.WithRanking(rankCfg)).Router(),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       30 * time.Second,
 		WriteTimeout:      90 * time.Second, // ассистент: LLM 20 с + повтор
