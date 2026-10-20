@@ -46,3 +46,30 @@ func writeError(w http.ResponseWriter, r *http.Request, err error) {
 	}
 	writeJSON(w, apiErr.Status, map[string]any{"error": apiErr})
 }
+
+func errBadRequest(msg string, details map[string]any) *APIError {
+	return &APIError{Status: http.StatusBadRequest, Code: "bad_request", Message: msg, Details: details}
+}
+
+func errValidation(details map[string]any) *APIError {
+	return &APIError{Status: http.StatusUnprocessableEntity, Code: "validation_failed", Message: "Проверьте введённые данные", Details: details}
+}
+
+func errConflict(code, msg string, details map[string]any) *APIError {
+	return &APIError{Status: http.StatusConflict, Code: code, Message: msg, Details: details}
+}
+
+var (
+	errUnauthorized = &APIError{Status: http.StatusUnauthorized, Code: "unauthorized", Message: "Требуется вход"}
+	errForbidden    = &APIError{Status: http.StatusForbidden, Code: "forbidden", Message: "Недостаточно прав"}
+)
+
+// decodeJSON читает тело запроса строго: неизвестные поля — ошибка.
+func decodeJSON(w http.ResponseWriter, r *http.Request, dst any) error {
+	dec := json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<20))
+	dec.DisallowUnknownFields()
+	if err := dec.Decode(dst); err != nil {
+		return errBadRequest("Некорректный JSON: "+err.Error(), nil)
+	}
+	return nil
+}
