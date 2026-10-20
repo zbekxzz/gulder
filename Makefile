@@ -54,6 +54,17 @@ seed: ## Загрузить data/*.csv (идемпотентно); в Docker, е
 eval: ## Офлайн-оценка ranker (§11), воспроизводима по EVAL_SEED
 	cd backend && go run ./cmd/eval -seed $(EVAL_SEED) -report ../docs/eval_report.md
 
+# ─────────────── Эксплуатация ───────────────
+.PHONY: backup restore prod-config
+backup: ## Бэкап БД (scripts/backup.sh), см. docs/runbook.md
+	scripts/backup.sh
+
+restore: ## Восстановить DUMP=<файл> в пустую TARGET_URL
+	scripts/restore.sh $(DUMP)
+
+prod-config: ## Проверить docker-compose.prod.yml
+	$(COMPOSE) -f docker-compose.prod.yml config --quiet
+
 # ─────────────── Проверки ───────────────
 .PHONY: test test-go test-web test-e2e lint lint-go lint-web vuln build gen-api fmt
 test: test-go test-web test-e2e ## Все тесты: Go, vitest, Playwright

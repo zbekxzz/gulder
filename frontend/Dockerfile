@@ -16,4 +16,4 @@ RUN npm run build
 
 FROM caddy:2-alpine AS prod
 COPY --from=build /app/dist /srv
-COPY Caddyfile.static /etc/caddy/Caddyfile
+COPY Caddyfile /etc/caddy/Caddyfile
