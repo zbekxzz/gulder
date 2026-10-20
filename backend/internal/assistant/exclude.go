@@ -23,6 +23,7 @@ type ExcludeRequest struct {
 	ExcludedGifts    []int64
 	ItemType         string
 	ItemID           int64
+	Title            string // «характер» набора сохраняется после замены
 }
 
 // Ошибки исключения.
@@ -108,7 +109,7 @@ func Exclude(c *recommend.Context, req ExcludeRequest) (ExcludeResult, error) {
 	if len(reasons) > 3 {
 		reasons = reasons[:3]
 	}
-	set, err := p.validate(ProposedSet{BouquetID: bouquetID, GiftIDs: giftIDs, Reasons: reasons}, GeneratorFallback)
+	set, err := p.validate(ProposedSet{BouquetID: bouquetID, GiftIDs: giftIDs, Reasons: reasons, Title: req.Title}, GeneratorFallback)
 	if err != nil {
 		return out, err
 	}

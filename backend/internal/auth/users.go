@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
 
 	"github.com/zbekxzz/gulder/backend/internal/store"
 )
@@ -40,10 +39,11 @@ func CreateUser(ctx context.Context, q store.Querier, email, password, name stri
 		return User{}, err
 	}
 	u := User{Email: NormalizeEmail(email), DisplayName: name, Role: role, ShopID: shopID}
+	// ON CONFLICT вместо перехвата unique_violation: ошибка внутри транзакции обрывала бы её (сид, тесты)
 	err = q.QueryRow(ctx, `INSERT INTO users (email, display_name, role, shop_id, password_hash)
-		VALUES ($1, NULLIF($2,''), $3, $4, $5) RETURNING id`, u.Email, name, string(role), shopID, hash).Scan(&u.ID)
-	var pgErr *pgconn.PgError
-	if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+		VALUES ($1, NULLIF($2,''), $3, $4, $5) ON CONFLICT (email) DO NOTHING RETURNING id`,
+		u.Email, name, string(role), shopID, hash).Scan(&u.ID)
+	if errors.Is(err, pgx.ErrNoRows) {
 		return User{}, ErrEmailTaken
 	}
 	if err != nil {

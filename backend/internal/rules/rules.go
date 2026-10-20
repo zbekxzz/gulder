@@ -45,6 +45,12 @@ func plantAllergenKeys(t *domain.PlantTaxon) []string {
 	return keys
 }
 
+var speciesRu = map[string]string{"cat": "кошек", "dog": "собак", "horse": "лошадей"}
+
+var toxicityRu = map[domain.Toxicity]string{
+	domain.ToxMild: "лёгкая", domain.ToxModerate: "умеренная", domain.ToxSevere: "тяжёлая", domain.ToxUnknown: "нет данных",
+}
+
 func toxicityFor(t *domain.PlantTaxon, species string) domain.Toxicity {
 	if tox, ok := t.PetToxicity[species]; ok && tox != "" {
 		return tox
@@ -101,7 +107,7 @@ func checkFlower(res *Result, f domain.Flower, p domain.Profile) {
 				res.add(Violation{
 					Code: CodePetToxic, Decision: domain.Block, Item: item,
 					Attribute: domain.AttrPets, Source: src,
-					Message: fmt.Sprintf("«%s» опасен для животного (%s: %s)", item, species, tox),
+					Message: fmt.Sprintf("«%s»: опасно для %s (токсичность: %s)", item, speciesRu[species], toxicityRu[tox]),
 				})
 			}
 		}
@@ -115,7 +121,7 @@ func checkFlower(res *Result, f domain.Flower, p domain.Profile) {
 			res.add(Violation{
 				Code: CodePetsUnknown, Decision: domain.Warn, Item: item, ConfidencePenalty: penalty,
 				Attribute: domain.AttrPets, Source: p.SourceOf(domain.AttrPets),
-				Message: fmt.Sprintf("Неизвестно, есть ли дома животные; «%s» опасен для кошек или собак", item),
+				Message: fmt.Sprintf("Неизвестно, есть ли дома животные; «%s» опасно для кошек или собак", item),
 			})
 			res.missing(domain.AttrPets)
 		}
@@ -275,17 +281,17 @@ func CheckGift(g domain.GiftItem, p domain.Profile) Result {
 	case petsKnown && len(pets) > 0 && g.PetHazard != nil && *g.PetHazard: // G5
 		res.add(Violation{
 			Code: CodePetHazard, Decision: domain.Block, Item: item, Attribute: domain.AttrPets, Source: petSrc,
-			Message: fmt.Sprintf("«%s» опасен для домашних животных", item),
+			Message: fmt.Sprintf("«%s»: опасно для домашних животных", item),
 		})
 	case petsKnown && len(pets) > 0 && g.PetHazard == nil: // G6
 		res.add(Violation{
 			Code: CodePetHazard, Decision: domain.Warn, Item: item, Attribute: domain.AttrPets, Source: petSrc,
-			ConfidencePenalty: 0.15, Message: fmt.Sprintf("Нет данных, безопасен ли «%s» для животных", item),
+			ConfidencePenalty: 0.15, Message: fmt.Sprintf("Нет данных, вреден ли «%s» для животных", item),
 		})
 	case !petsKnown && g.PetHazard != nil && *g.PetHazard: // G7
 		res.add(Violation{
 			Code: CodePetsUnknown, Decision: domain.Warn, Item: item, Attribute: domain.AttrPets, Source: petSrc,
-			ConfidencePenalty: 0.15, Message: fmt.Sprintf("Неизвестно, есть ли дома животные; «%s» опасен для них", item),
+			ConfidencePenalty: 0.15, Message: fmt.Sprintf("Неизвестно, есть ли дома животные; «%s» опасно для них", item),
 		})
 		res.missing(domain.AttrPets)
 	}

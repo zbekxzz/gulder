@@ -162,7 +162,7 @@ func (s *Server) excludeGiftSetItem(w http.ResponseWriter, r *http.Request) {
 	res, err := assistant.Exclude(c, assistant.ExcludeRequest{
 		BouquetID: parent.BouquetID, GiftIDs: parent.GiftIDs, Budget: parent.Budget,
 		ExcludedBouquets: parent.ExcludedBouquets, ExcludedGifts: parent.ExcludedGifts,
-		ItemType: req.ItemType, ItemID: req.ItemID,
+		ItemType: req.ItemType, ItemID: req.ItemID, Title: parent.Title,
 	})
 	switch {
 	case errors.Is(err, assistant.ErrItemNotInSet):

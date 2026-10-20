@@ -21,6 +21,7 @@ type Stored struct {
 	ExcludedGifts    []int64
 	ExcludedBouquets []int64
 	ParentSetID      *int64
+	Title            string
 }
 
 // Save пишет набор. CHECK (total_price <= budget) в БД — последняя линия защиты AC-4.
@@ -46,13 +47,13 @@ func Save(ctx context.Context, q store.Querier, runID int64, budget domain.Money
 func LoadOwned(ctx context.Context, q store.Querier, giverID, setID int64) (Stored, error) {
 	var s Stored
 	err := q.QueryRow(ctx, `
-		SELECT gs.id, gs.run_id, gs.budget, gs.bouquet_id, gs.gift_item_ids, gs.excluded_item_ids, gs.excluded_bouquet_ids, gs.parent_set_id
+		SELECT gs.id, gs.run_id, gs.budget, gs.bouquet_id, gs.gift_item_ids, gs.excluded_item_ids, gs.excluded_bouquet_ids, gs.parent_set_id, coalesce(gs.title, '')
 		  FROM gift_sets gs
 		  JOIN recommendation_runs rr ON rr.id = gs.run_id
 		  JOIN occasions o ON o.id = rr.occasion_id
 		  JOIN recipients r ON r.id = o.recipient_id
 		 WHERE gs.id = $1 AND r.giver_id = $2`, setID, giverID).
-		Scan(&s.ID, &s.RunID, &s.Budget, &s.BouquetID, &s.GiftIDs, &s.ExcludedGifts, &s.ExcludedBouquets, &s.ParentSetID)
+		Scan(&s.ID, &s.RunID, &s.Budget, &s.BouquetID, &s.GiftIDs, &s.ExcludedGifts, &s.ExcludedBouquets, &s.ParentSetID, &s.Title)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return s, store.ErrNotFound
 	}
