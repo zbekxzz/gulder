@@ -1,17 +1,17 @@
-scientific_name,genus,family,tox_cat,tox_dog,tox_horse,pollen,allergen_codes,aspca_url,gbif_key,image_url,image_license,image_author,verified
-Rosa,Rosa,Rosaceae,none,none,none,low,,,,,,,false
-Lilium,Lilium,Liliaceae,severe,none,none,strong,,,,,,,false
-Tulipa,Tulipa,Liliaceae,mild,mild,mild,low,,,,,,,false
-Chrysanthemum,Chrysanthemum,Asteraceae,mild,mild,mild,medium,,,,,,,false
-Helianthus annuus,Helianthus,Asteraceae,none,none,none,strong,,,,,,,false
-Gerbera jamesonii,Gerbera,Asteraceae,none,none,none,low,,,,,,,false
-Dianthus caryophyllus,Dianthus,Caryophyllaceae,mild,mild,mild,low,,,,,,,false
-Phalaenopsis,Phalaenopsis,Orchidaceae,none,none,none,none,,,,,,,false
-Hydrangea macrophylla,Hydrangea,Hydrangeaceae,moderate,moderate,moderate,low,,,,,,,false
-Paeonia,Paeonia,Paeoniaceae,mild,mild,mild,medium,,,,,,,false
-Narcissus,Narcissus,Amaryllidaceae,moderate,moderate,moderate,medium,,,,,,,false
-Alstroemeria,Alstroemeria,Alstroemeriaceae,none,none,none,low,,,,,,,false
-Gypsophila paniculata,Gypsophila,Caryophyllaceae,mild,mild,unknown,low,,,,,,,false
-Freesia,Freesia,Iridaceae,none,none,none,medium,,,,,,,false
-Eucalyptus,Eucalyptus,Myrtaceae,mild,mild,mild,low,,,,,,,false
-Hyacinthus orientalis,Hyacinthus,Asparagaceae,mild,mild,mild,medium,,,,,,,false
+scientific_name,genus,family,tox_cat,tox_dog,tox_horse,pollen,allergen_codes,aspca_url,gbif_key,image_url,image_license,image_author,verified,aspca_note
+Rosa,Rosa,Rosaceae,none,none,none,low,,https://www.aspca.org/pet-care/animal-poison-control/toxic-and-non-toxic-plants/rose,,,,,true,"Rosa Species, Rosaceae: Non-Toxic to Dogs, Cats, Horses"
+Lilium,Lilium,Liliaceae,severe,none,none,strong,,https://www.aspca.org/pet-care/animal-poison-control/toxic-and-non-toxic-plants/lily,,,,,true,"Lilium species, Liliaceae: Toxic to Cats (kidney failure); Non-Toxic to Dogs, Horses"
+Tulipa,Tulipa,Liliaceae,mild,mild,mild,low,,https://www.aspca.org/pet-care/animal-poison-control/toxic-and-non-toxic-plants/tulip,,,,,true,"Tulipa spp., Liliaceae: Toxic to Dogs, Cats, Horses"
+Chrysanthemum,Chrysanthemum,Asteraceae,mild,mild,mild,medium,,https://www.aspca.org/pet-care/animal-poison-control/toxic-and-non-toxic-plants/chrysanthemum,,,,,true,"Chrysanthemum spp., Compositae: Toxic to Dogs, Cats, Horses"
+Helianthus annuus,Helianthus,Asteraceae,none,none,none,strong,,https://www.aspca.org/pet-care/animal-poison-control/toxic-and-non-toxic-plants/sunflower,,,,,true,"Страница ASPCA для H. angustifolius (тот же род), Compositae: Non-Toxic to Dogs, Cats, Horses"
+Gerbera jamesonii,Gerbera,Asteraceae,none,none,none,low,,https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/gerber-daisy,,,,,true,"Gerbera jamesonii, Compositae: Non-Toxic to Dogs, Cats, Horses"
+Dianthus caryophyllus,Dianthus,Caryophyllaceae,mild,mild,mild,low,,https://www.aspca.org/pet-care/animal-poison-control/toxic-and-non-toxic-plants/carnation,,,,,true,"Dianthus caryophyllus, Caryophyllaceae: Toxic to Dogs, Cats, Horses"
+Phalaenopsis,Phalaenopsis,Orchidaceae,none,none,none,none,,https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/phalaenopsis-orchid,,,,,true,"Phalaenopsis sp., Orchidaceae: Non-Toxic to Dogs, Cats, Horses"
+Hydrangea macrophylla,Hydrangea,Hydrangeaceae,moderate,moderate,moderate,low,,https://www.aspca.org/pet-care/animal-poison-control/toxic-and-non-toxic-plants/hydrangea,,,,,true,"Страница для H. arborescens, Hydrangeaceae: Toxic to Dogs, Cats, Horses"
+Paeonia,Paeonia,Paeoniaceae,mild,mild,mild,medium,,https://www.aspca.org/pet-care/animal-poison-control/toxic-and-non-toxic-plants/peony,,,,,true,"Paeonia officinalis: Toxic to Dogs, Cats, Horses"
+Narcissus,Narcissus,Amaryllidaceae,moderate,moderate,moderate,medium,,https://www.aspca.org/pet-care/animal-poison-control/toxic-and-non-toxic-plants/daffodil,,,,,true,"Narcissus spp, Amaryllidaceae: Toxic to Dogs, Cats, Horses"
+Alstroemeria,Alstroemeria,Alstroemeriaceae,none,none,none,low,,https://www.aspca.org/pet-care/animal-poison-control/toxic-and-non-toxic-plants/peruvian-lily,,,,,true,"Alstroemeria (ASPCA: Liliaceae): Non-Toxic to Dogs, Cats, Horses"
+Gypsophila paniculata,Gypsophila,Caryophyllaceae,mild,mild,unknown,low,,https://www.aspca.org/pet-care/animal-poison-control/toxic-and-non-toxic-plants/babys-breath,,,,,false,"РАСХОЖДЕНИЕ: страница ASPCA про G. elegans — Non-Toxic (mild GI upset); для G. paniculata вторичные источники дают лёгкую токсичность. Оставлено консервативно mild/mild/unknown, нужна проверка человеком"
+Freesia,Freesia,Iridaceae,none,none,none,medium,,https://www.aspca.org/news/do-you-know-which-flowers-and-plants-are-toxic-pets-our-experts-explain,,,,,true,Отдельной записи в базе ASPCA нет; эксперты ASPCA APCC называют Freesia spp. нетоксичной (статья ASPCA)
+Eucalyptus,Eucalyptus,Myrtaceae,mild,mild,mild,low,,https://www.aspca.org/pet-care/animal-poison-control/toxic-and-non-toxic-plants/eucalyptus,,,,,true,"Eucalyptus species, Myrtaceae: Toxic to Dogs, Cats, Horses"
+Hyacinthus orientalis,Hyacinthus,Asparagaceae,mild,mild,mild,medium,,https://www.aspca.org/pet-care/animal-poison-control/toxic-and-non-toxic-plants/hyacinth,,,,,true,"Hyacinthus orientalis (ASPCA: Liliaceae): Toxic to Dogs, Cats, Horses"

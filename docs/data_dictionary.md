@@ -17,7 +17,8 @@
 | allergen_codes | `;`-список | Дополнительные коды аллергенов (например `latex`) |
 | aspca_url | url | Страница ASPCA, по которой сверена строка (M7) |
 | gbif_key, image_url, image_license, image_author | | Таксономия и изображение GBIF; у изображения обязательна лицензия |
-| verified | bool | Строка сверена с ASPCA. Сейчас все `false`: данные из Приложения B черновые |
+| verified | bool | Строка сверена с ASPCA (см. [aspca_verification.md](aspca_verification.md)); 15 из 16 — `true`, гипсофила — спорная |
+| aspca_note | text | Что сказано на странице ASPCA (для повторной сверки) |
 
 ### shops.csv — магазины (FR-C05)
 `code` (ключ), `name`, `address`, `lat`, `lon`, `timezone` (IANA), `opening_hours` — JSON
