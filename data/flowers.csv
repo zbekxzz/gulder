@@ -1,0 +1,36 @@
+code,trade_name,scientific_name,genus,color,scent,season_months,care_notes,restrictions,taxon_confirmed
+rose_red,Роза Red Naomi,Rosa,Rosa,red,low,1;2;3;4;5;6;7;8;9;10;11;12,"Подрезать стебли, менять воду ежедневно",,true
+rose_white,Роза Avalanche,Rosa,Rosa,white,low,1;2;3;4;5;6;7;8;9;10;11;12,"Подрезать стебли, менять воду ежедневно",,true
+rose_pink,Роза пионовидная O'Hara,Rosa,Rosa,pink,medium,1;2;3;4;5;6;7;8;9;10;11;12,Беречь от прямого солнца,,true
+rose_spray,Роза кустовая Lydia,Rosa,Rosa,pink,low,1;2;3;4;5;6;7;8;9;10;11;12,,,true
+rose_yellow,Роза Penny Lane,Rosa,Rosa,yellow,low,1;2;3;4;5;6;7;8;9;10;11;12,,,true
+rose_peach,Роза Peach Avalanche,Rosa,Rosa,peach,low,1;2;3;4;5;6;7;8;9;10;11;12,,,true
+lily_white,Лилия восточная Siberia,Lilium,Lilium,white,strong,1;2;3;4;5;6;7;8;9;10;11;12,Удалять пыльники,Опасна для кошек,true
+lily_pink,Лилия Sorbonne,Lilium,Lilium,pink,strong,1;2;3;4;5;6;7;8;9;10;11;12,Удалять пыльники,Опасна для кошек,true
+tulip_red,Тюльпан красный,Tulipa,Tulipa,red,low,1;2;3;4;5;12,Холодная вода,,true
+tulip_yellow,Тюльпан жёлтый,Tulipa,Tulipa,yellow,low,1;2;3;4;5;12,Холодная вода,,true
+tulip_white,Тюльпан белый,Tulipa,Tulipa,white,low,1;2;3;4;5;12,Холодная вода,,true
+chrysanthemum_white,Хризантема кустовая Baltica,Chrysanthemum,Chrysanthemum,white,low,1;2;3;4;5;6;7;8;9;10;11;12,,,true
+chrysanthemum_yellow,Хризантема Golden,Chrysanthemum,Chrysanthemum,yellow,low,1;2;3;4;5;6;7;8;9;10;11;12,,,true
+sunflower,Подсолнух,Helianthus annuus,Helianthus,yellow,none,6;7;8;9;10,Много воды,,true
+gerbera_pink,Гербера розовая,Gerbera jamesonii,Gerbera,pink,none,1;2;3;4;5;6;7;8;9;10;11;12,Неглубокая вода,,true
+gerbera_orange,Гербера оранжевая,Gerbera jamesonii,Gerbera,orange,none,1;2;3;4;5;6;7;8;9;10;11;12,Неглубокая вода,,true
+gerbera_red,Гербера красная,Gerbera jamesonii,Gerbera,red,none,1;2;3;4;5;6;7;8;9;10;11;12,Неглубокая вода,,true
+carnation_red,Гвоздика красная,Dianthus caryophyllus,Dianthus,red,low,1;2;3;4;5;6;7;8;9;10;11;12,,,true
+carnation_pink,Гвоздика розовая,Dianthus caryophyllus,Dianthus,pink,low,1;2;3;4;5;6;7;8;9;10;11;12,,,true
+orchid_white,Орхидея Фаленопсис белая,Phalaenopsis,Phalaenopsis,white,none,1;2;3;4;5;6;7;8;9;10;11;12,Не переливать,,true
+orchid_purple,Орхидея Фаленопсис сиреневая,Phalaenopsis,Phalaenopsis,purple,none,1;2;3;4;5;6;7;8;9;10;11;12,Не переливать,,true
+hydrangea_blue,Гортензия голубая,Hydrangea macrophylla,Hydrangea,blue,none,4;5;6;7;8;9;10;11,"Много воды, опрыскивать",,true
+hydrangea_white,Гортензия белая,Hydrangea macrophylla,Hydrangea,white,none,4;5;6;7;8;9;10;11,"Много воды, опрыскивать",,true
+peony_pink,Пион Sarah Bernhardt,Paeonia,Paeonia,pink,medium,5;6;7,,,true
+peony_white,Пион Duchesse de Nemours,Paeonia,Paeonia,white,medium,5;6;7,,,true
+narcissus,Нарцисс,Narcissus,Narcissus,yellow,medium,2;3;4,Не ставить в одну вазу с другими цветами,,true
+alstroemeria_pink,Альстромерия розовая,Alstroemeria,Alstroemeria,pink,none,1;2;3;4;5;6;7;8;9;10;11;12,,,true
+alstroemeria_white,Альстромерия белая,Alstroemeria,Alstroemeria,white,none,1;2;3;4;5;6;7;8;9;10;11;12,,,true
+gypsophila,Гипсофила,Gypsophila paniculata,Gypsophila,white,low,1;2;3;4;5;6;7;8;9;10;11;12,,,true
+freesia_yellow,Фрезия жёлтая,Freesia,Freesia,yellow,strong,1;2;3;4;5;6;7;8;9;10;11;12,,,true
+freesia_white,Фрезия белая,Freesia,Freesia,white,strong,1;2;3;4;5;6;7;8;9;10;11;12,,,true
+eucalyptus,Эвкалипт Цинерея,Eucalyptus,Eucalyptus,green,medium,1;2;3;4;5;6;7;8;9;10;11;12,,,true
+hyacinth,Гиацинт голубой,Hyacinthus orientalis,Hyacinthus,blue,strong,1;2;3;4,,,true
+protea_king,Протея Кинг (уточняется),,Protea,pink,none,1;2;3;4;5;6;7;8;9;10;11;12,,,false
+pistacia_green,"Фисташка, зелень (уточняется)",,Pistacia,green,low,1;2;3;4;5;6;7;8;9;10;11;12,,,false

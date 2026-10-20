@@ -1,0 +1,33 @@
+shop_code,sku,name,category,composition,allergen_codes,scent,pet_hazard,price,discount_price,discount_from,discount_until,in_stock
+abay,G-AB-01,Открытка «Спасибо»,card,бумага,-,none,false,800,,,,true
+abay,G-AB-02,Открытка ручной работы,card,"бумага, лён",-,none,false,1500,,,,true
+abay,G-AB-03,Конфеты пралине с фундуком,sweets,"шоколад, фундук, сахар, молоко",food:nuts:hazelnut;food:cocoa;food:milk,none,true,4500,,,,true
+abay,G-AB-04,Медовик домашний (мини),sweets,,,none,,3500,,,,true
+abay,G-AB-05,Свеча ароматическая «Ваниль»,candle,"соевый воск, отдушка",fragrance;food:soy,medium,,6000,5000,2026-10-01T00:00:00+05:00,2027-06-30T23:59:59+05:00,true
+dostyk,G-DS-01,Мишка плюшевый 30 см,soft_toy,полиэстер,-,none,false,6000,,,,true
+dostyk,G-DS-02,"Макаронс, 12 шт.",sweets,"миндальная мука, белок, сахар, сливки",food:nuts:almond;food:egg;food:milk,none,false,5500,,,,true
+dostyk,G-DS-03,Парфюм «Пион» 50 мл,fragrance,"спирт, отдушка",fragrance,strong,,18000,15500,2026-10-01T00:00:00+05:00,2027-06-30T23:59:59+05:00,true
+dostyk,G-DS-04,Открытка-конверт,card,бумага,-,none,false,600,,,,true
+dostyk,G-DS-05,Серьги серебро 925,jewelry,серебро 925,-,none,false,14000,,,,true
+tole_bi,G-TB-01,Шоколад тёмный 72%,sweets,"какао, сахар, какао-масло",food:cocoa,none,true,2200,,,,true
+tole_bi,G-TB-02,Конфеты «Ассорти» (весовые),sweets,,,none,,3000,,,,true
+tole_bi,G-TB-03,Зайка мягкий,soft_toy,хлопок,-,none,false,4500,,,,true
+tole_bi,G-TB-04,Открытка «С днём рождения»,card,бумага,-,none,false,700,,,,true
+tole_bi,G-TB-05,Свеча без запаха,candle,парафин,-,none,false,2500,,,,true
+seifullin,G-SF-01,"Мёд горный, 250 г",sweets,мёд,food:honey,none,false,3800,,,,true
+seifullin,G-SF-02,"Брауни, 6 шт.",sweets,"шоколад, пшеничная мука, яйца, масло",food:cocoa;food:gluten;food:egg;food:milk,none,true,4200,3600,2026-09-01T00:00:00+05:00,2026-09-30T23:59:59+05:00,true
+seifullin,G-SF-03,Открытка «Люблю»,card,бумага,-,none,false,900,,,,true
+seifullin,G-SF-04,Браслет с подвеской,jewelry,"сталь, эмаль",-,none,false,9500,,,,true
+seifullin,G-SF-05,Ароматический диффузор,fragrance,"масла, отдушка",fragrance,strong,true,8500,,,,true
+rozybakiev,G-RZ-01,Мишка Тедди 50 см,soft_toy,искусственный мех,-,none,false,9000,,,,true
+rozybakiev,G-RZ-02,Трюфели ручной работы,sweets,,,none,,5200,,,,true
+rozybakiev,G-RZ-03,Кулон «Сердце»,jewelry,серебро 925,-,none,false,12000,9900,2026-10-01T00:00:00+05:00,2027-06-30T23:59:59+05:00,true
+rozybakiev,G-RZ-04,Открытка с конвертом,card,бумага,-,none,false,1000,,,,true
+rozybakiev,G-RZ-05,Свеча «Лаванда»,candle,"кокосовый воск, эфирное масло",fragrance,medium,,5500,,,,true
+rozybakiev,G-RZ-06,Арахис в шоколаде,sweets,"арахис, молочный шоколад",food:peanut;food:cocoa;food:milk,none,true,1800,,,,true
+al_farabi,G-AF-01,Открытка дизайнерская,card,бумага,-,none,false,1200,,,,true
+al_farabi,G-AF-02,Пряники расписные,sweets,"пшеничная мука, мёд, яйца",food:gluten;food:honey;food:egg,none,false,3200,,,,true
+al_farabi,G-AF-03,Котик плюшевый,soft_toy,полиэстер,-,none,false,5000,,,,true
+al_farabi,G-AF-04,Туалетная вода «Цитрус»,fragrance,"спирт, отдушка",fragrance,strong,,14500,,,,true
+al_farabi,G-AF-05,Свеча «Хлопок»,candle,,,low,,4000,,,,true
+al_farabi,G-AF-06,Кольцо серебро,jewelry,серебро 925,-,none,false,16000,,,,false
