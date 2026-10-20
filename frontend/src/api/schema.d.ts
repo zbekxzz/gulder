@@ -452,6 +452,98 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/bouquets/{id}/substitutions/validate": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: components["parameters"]["Id"];
+      };
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Проверить замену цветка в букете (FR-S01, AC-3); BLOCK → 409
+     * @description Ответ — только GiverView. dry_run=true — мгновенная проверка без записи в журнал.
+     */
+    post: operations["validateSubstitution"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/recommendations/{id}/feedback": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: components["parameters"]["Id"];
+      };
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Отзыв о рекомендации; меняет профиль только этого получателя (FR-F01, AC-8) */
+    post: operations["createFeedback"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/admin/data-quality": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Качество данных (растения без ASPCA, подарки без состава, букеты без фото) */
+    get: operations["dataQuality"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/admin/analytics": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Агрегаты запусков, отзывов и исключений */
+    get: operations["analytics"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/admin/rules": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Версии Rules Engine и модели, веса ranker'а */
+    get: operations["rulesInfo"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/recipients/{id}/invites": {
     parameters: {
       query?: never;
@@ -896,6 +988,28 @@ export interface components {
         warnings: components["schemas"]["GiverReason"][];
       }[];
       message?: string;
+    };
+    GiverView: {
+      suitable: boolean;
+      /** @enum {string} */
+      decision: "allow" | "warn" | "block";
+      reasons: components["schemas"]["GiverReason"][];
+      missing_info: string[];
+    };
+    CountByKey: {
+      key: string;
+      count: number;
+    };
+    Analytics: {
+      runs_total: number;
+      numerology_runs: number;
+      feedback_total: number;
+      avg_rating: number | null;
+      gift_sets_total: number;
+      gift_sets_llm: number;
+      substitutions_blocked: number;
+      runs_by_day: components["schemas"]["CountByKey"][];
+      exclusion_codes: components["schemas"]["CountByKey"][];
     };
     Status: {
       status: string;
@@ -1703,6 +1817,169 @@ export interface operations {
       };
       404: components["responses"]["Error"];
       422: components["responses"]["Error"];
+    };
+  };
+  validateSubstitution: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: components["parameters"]["Id"];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** Format: int64 */
+          from_flower_id: number;
+          /** Format: int64 */
+          to_flower_id: number;
+          /** Format: int64 */
+          occasion_id?: number | null;
+          /** @default false */
+          dry_run?: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description Замена допустима (allow/warn) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            /** @enum {string} */
+            decision: "allow" | "warn";
+            giver_view: components["schemas"]["GiverView"];
+            composition: {
+              /** Format: int64 */
+              flower_id: number;
+              trade_name: string;
+              stems: number;
+            }[];
+          };
+        };
+      };
+      404: components["responses"]["Error"];
+      /** @description Замена запрещена; details = {decision, giver_view} */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Error"];
+        };
+      };
+      422: components["responses"]["Error"];
+    };
+  };
+  createFeedback: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: components["parameters"]["Id"];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** Format: int64 */
+          bouquet_id?: number | null;
+          rating?: number | null;
+          liked?: boolean | null;
+          comment?: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Сохранено */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: components["responses"]["Error"];
+      422: components["responses"]["Error"];
+    };
+  };
+  dataQuality: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            [key: string]: {
+              /** Format: int64 */
+              id: number;
+              name: string;
+              shop?: string;
+            }[];
+          };
+        };
+      };
+    };
+  };
+  analytics: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Analytics"];
+        };
+      };
+    };
+  };
+  rulesInfo: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            rules_version: string;
+            model_version: string;
+            weights: {
+              [key: string]: number;
+            };
+            numerology_weight: number;
+            numerology_label: string;
+          };
+        };
+      };
     };
   };
   createInvite: {
