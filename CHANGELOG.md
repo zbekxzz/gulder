@@ -9,3 +9,5 @@
   docker-compose, Makefile, CI (lint, тесты с `-race`, govulncheck, миграции up/down/up, Playwright).
 - M1: JWT-аутентификация и роли, получатели с профилем value/source/confidence, поводы,
   импорт каталога CSV с построчным отчётом, наличие и цены, audit log.
+- M2: Rules Engine (аллергены, питомцы, астма и запахи, неизвестный состав, бюджет, замены,
+  уточняющий вопрос, приватный GiverView) с property-тестами по справочнику растений.

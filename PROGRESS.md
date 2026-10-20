@@ -36,6 +36,18 @@
 - Тест: `lat`/`lon` и токены приглашений не попадают в access-лог (FR-L01). Тест сверки роутера с `openapi.yaml`.
 - Миграция `00003_auth.sql`.
 
+## M2. Безопасность — закрыта (тег `m2`)
+
+Сделано:
+- `internal/rules` целиком по §7: F1–F8, S1–S7, G1–G8, `CheckGiftSet` (OVER_BUDGET, DUPLICATE_ITEM),
+  `ValidateSubstitution`, `FilterCandidates`, `BestClarifyingQuestion`, `GiverView`, `ConfidenceMultiplier`.
+  Пакет без зависимостей от БД/HTTP/LLM, версия `rules-1.0.0`.
+- Все 18 обязательных тестов §7.7 (AC-1, AC-2, AC-3, AC-4, AC-5 в именах), матрицы S1–S7 и G1–G7,
+  property-тесты: токсичный для указанного питомца таксон справочника всегда BLOCK при любом профиле
+  (3 вида × 13 токсичных родов × 50 случайных профилей), неподтверждённое растение всегда BLOCK.
+- Покрытие `internal/rules` — 100% (CI требует ≥ 90%).
+- ADR 0005: трактовки спецификации правил.
+
 ## Открытые вопросы
 1. **Docker / CI.** Локально Docker не установлен, поэтому `docker compose` и GitHub Actions не запускались.
    Нужно запушить репозиторий на GitHub и убедиться, что CI зелёный.
