@@ -15,6 +15,7 @@ import (
 
 	"github.com/zbekxzz/gulder/backend/internal/catalog"
 	"github.com/zbekxzz/gulder/backend/internal/domain"
+	"github.com/zbekxzz/gulder/backend/internal/metrics"
 	"github.com/zbekxzz/gulder/backend/internal/ranking"
 	"github.com/zbekxzz/gulder/backend/internal/recipients"
 	"github.com/zbekxzz/gulder/backend/internal/rules"
@@ -256,6 +257,7 @@ func Recommend(ctx context.Context, st *store.Store, cfg ranking.Config, giverID
 		excluded := make([]excludedEntry, 0, len(c.Excluded))
 		for _, r := range c.Excluded {
 			excluded = append(excluded, excludedEntry{BouquetID: r.ItemID, Codes: r.Codes()})
+			metrics.CountBlocks(blockCodes(r))
 		}
 		var questionText *string
 		if run.ClarifyingQuestion != nil {
@@ -272,6 +274,16 @@ func Recommend(ctx context.Context, st *store.Store, cfg ranking.Config, giverID
 		return Run{}, fmt.Errorf("recommend: %w", err)
 	}
 	return run, nil
+}
+
+func blockCodes(r rules.Result) []string {
+	var out []string
+	for _, v := range r.Violations {
+		if v.Decision == domain.Block {
+			out = append(out, v.Code)
+		}
+	}
+	return out
 }
 
 // RunOwner возвращает повод и получателя запуска, если он принадлежит дарителю.

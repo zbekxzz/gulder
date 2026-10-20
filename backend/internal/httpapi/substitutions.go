@@ -11,6 +11,7 @@ import (
 	"github.com/zbekxzz/gulder/backend/internal/auth"
 	"github.com/zbekxzz/gulder/backend/internal/catalog"
 	"github.com/zbekxzz/gulder/backend/internal/domain"
+	"github.com/zbekxzz/gulder/backend/internal/metrics"
 	"github.com/zbekxzz/gulder/backend/internal/recipients"
 	"github.com/zbekxzz/gulder/backend/internal/recommend"
 	"github.com/zbekxzz/gulder/backend/internal/rules"
@@ -143,6 +144,11 @@ func (s *Server) validateSubstitution(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if res.Blocked() {
+		for _, v := range res.Violations {
+			if v.Decision == domain.Block {
+				metrics.RulesBlocks.WithLabelValues(v.Code).Inc()
+			}
+		}
 		msgs := make([]string, 0, len(gv.Reasons))
 		for _, reason := range gv.Reasons {
 			msgs = append(msgs, reason.Message)

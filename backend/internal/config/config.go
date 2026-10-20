@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net/netip"
 	"os"
 	"strconv"
 	"strings"
@@ -25,7 +26,12 @@ type Config struct {
 	LLMModel        string
 	LLMTimeout      time.Duration
 	DataDir         string
-	RankingConfig   string // путь к ranking.yaml; пусто = встроенный
+	RankingConfig   string         // путь к ranking.yaml; пусто = встроенный
+	MetricsAddr     string         // отдельный адрес для /metrics; пусто — не поднимать
+	RateLimitAuth   int            // запросов в минуту на IP для /auth/*
+	RateLimitHeavy  int            // запросов в минуту на пользователя для /recommendations и /gift-sets
+	RateLimitInvite int            // запросов в минуту на токен приглашения
+	TrustedProxies  []netip.Prefix // от них принимается X-Forwarded-For (Caddy)
 }
 
 // IsDev сообщает, что сервис запущен в режиме разработки.
@@ -43,6 +49,10 @@ func Load() (Config, error) {
 		LLMModel:        get("LLM_MODEL", "claude-opus-5-5"),
 		DataDir:         get("DATA_DIR", "../data"),
 		RankingConfig:   os.Getenv("RANKING_CONFIG"),
+		MetricsAddr:     get("METRICS_ADDR", ":9090"),
+		RateLimitAuth:   Int("RATE_LIMIT_AUTH", 30),
+		RateLimitHeavy:  Int("RATE_LIMIT_HEAVY", 30),
+		RateLimitInvite: Int("RATE_LIMIT_INVITE", 10),
 	}
 	var err error
 	if c.LogLevel, err = parseLevel(get("LOG_LEVEL", "info")); err != nil {
@@ -56,6 +66,13 @@ func Load() (Config, error) {
 	}
 	if c.LLMTimeout, err = time.ParseDuration(get("LLM_TIMEOUT", "20s")); err != nil {
 		return c, fmt.Errorf("LLM_TIMEOUT: %w", err)
+	}
+	for _, p := range splitList(get("TRUSTED_PROXIES", "")) {
+		prefix, err := netip.ParsePrefix(p)
+		if err != nil {
+			return c, fmt.Errorf("TRUSTED_PROXIES: %w", err)
+		}
+		c.TrustedProxies = append(c.TrustedProxies, prefix)
 	}
 	if c.DatabaseURL == "" {
 		return c, errors.New("DATABASE_URL is required")

@@ -1,0 +1,26 @@
+# Прод: статика фронтенда + reverse proxy к API, TLS выдаёт Caddy автоматически (Let's Encrypt) для {$DOMAIN}.
+# /metrics наружу не публикуется (backend слушает его на отдельном порту 9090 внутри сети compose).
+{$DOMAIN:localhost} {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "geolocation=(self), camera=(), microphone=()"
+		Content-Security-Policy "default-src 'self'; img-src 'self' data: https://*.tile.openstreetmap.org https://*.gbif.org https://api.gbif.org; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'"
+		-Server
+	}
+
+	handle /api/* {
+		reverse_proxy backend:8080
+	}
+	handle /healthz {
+		reverse_proxy backend:8080
+	}
+	handle {
+		root * /srv
+		try_files {path} /index.html
+		file_server
+	}
+}

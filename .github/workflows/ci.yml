@@ -92,6 +92,8 @@ jobs:
           node-version: 24
           cache: npm
           cache-dependency-path: frontend/package-lock.json
+      - name: validate production compose
+        run: DOMAIN=example.org POSTGRES_PASSWORD=x JWT_SECRET=0123456789abcdef0123456789abcdef docker compose -f docker-compose.prod.yml config --quiet
       - name: docker compose up
         run: docker compose up -d --build --wait
       - name: seed
