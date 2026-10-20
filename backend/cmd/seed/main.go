@@ -56,6 +56,6 @@ func run() error {
 		return err
 	}
 	slog.Info("seed done", "taxa", rep.Taxa, "shops", rep.Shops, "flowers", rep.Flowers,
-		"bouquets", rep.Bouquets, "gifts", rep.Gifts, "numerology_rows", rep.NumerologyRows, "dev_users", users)
+		"bouquets", rep.Bouquets, "gifts", rep.Gifts, "numerology_rows", rep.NumerologyRows, "judgements", rep.Judgements, "dev_users", users)
 	return nil
 }

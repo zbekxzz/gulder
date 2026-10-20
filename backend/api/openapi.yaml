@@ -82,6 +82,12 @@ paths:
         "200": { $ref: "#/components/responses/Auth" }
         "401": { $ref: "#/components/responses/Error" }
   /me:
+    delete:
+      summary: Удалить аккаунт — каскадно получатели, атрибуты, поводы, запуски, research-связка (§18.5)
+      operationId: deleteAccount
+      tags: [auth]
+      responses:
+        "204": { description: Удалён }
     get:
       summary: Текущий пользователь
       operationId: me
@@ -669,6 +675,148 @@ paths:
                   weights: { type: object, additionalProperties: { type: number } }
                   numerology_weight: { type: number }
                   numerology_label: { type: string }
+  /research/consent:
+    get:
+      summary: Состояние согласия, текущая версия и текст (RM-01)
+      operationId: getConsent
+      tags: [giver, research]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ConsentStatus" }
+    post:
+      summary: Дать согласие на исследовательский режим (RM-01)
+      operationId: grantConsent
+      tags: [giver, research]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [consent_version]
+              properties:
+                consent_version: { type: string }
+      responses:
+        "200":
+          description: Согласие активно
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ConsentStatus" }
+        "409": { $ref: "#/components/responses/Error" }
+    delete:
+      summary: Отозвать согласие в один шаг (RM-02)
+      operationId: revokeConsent
+      tags: [giver, research]
+      responses:
+        "204": { description: Отозвано }
+  /research/export:
+    post:
+      summary: Экспорт без прямых идентификаторов и свободного текста, группы < 5 скрыты (RM-06)
+      operationId: exportResearch
+      tags: [manager, research]
+      responses:
+        "200":
+          description: Экспорт
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ResearchExport" }
+  /research/data-dictionary:
+    get:
+      summary: Словарь данных экспорта (RM-06)
+      operationId: dataDictionary
+      tags: [manager, research]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { type: object, additionalProperties: true }
+  /research/evaluation:
+    get:
+      summary: Запуски офлайн-оценки (RM-04)
+      operationId: listEvaluations
+      tags: [manager, research]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items: { type: array, items: { $ref: "#/components/schemas/ExperimentRun" } }
+  /research/evaluation/{run_id}:
+    parameters:
+      - { name: run_id, in: path, required: true, schema: { type: integer, format: int64 } }
+    get:
+      summary: Запуск и сравнение с другими запусками на том же split (RM-05)
+      operationId: getEvaluation
+      tags: [manager, research]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [run, same_split]
+                properties:
+                  run: { $ref: "#/components/schemas/ExperimentRun" }
+                  same_split: { type: array, items: { $ref: "#/components/schemas/ExperimentRun" } }
+        "404": { $ref: "#/components/responses/Error" }
+  /admin/expert-judgements:
+    get:
+      summary: Экспертная разметка версии набора и список версий (RM-07)
+      operationId: listJudgements
+      tags: [manager]
+      parameters:
+        - { name: dataset_version, in: query, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, versions]
+                properties:
+                  items: { type: array, items: { $ref: "#/components/schemas/ExpertJudgement" } }
+                  versions: { type: array, items: { $ref: "#/components/schemas/CountByKey" } }
+    post:
+      summary: Оценка 0–3 и причина в проверенную версию набора (не draft-*)
+      operationId: saveJudgement
+      tags: [manager]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [dataset_version, case_id, recipient_snapshot, occasion_snapshot, bouquet_id, grade, reason]
+              properties:
+                dataset_version: { type: string }
+                case_id: { type: string }
+                recipient_snapshot: { type: object, additionalProperties: true }
+                occasion_snapshot: { type: object, additionalProperties: true }
+                bouquet_id: { type: integer, format: int64 }
+                grade: { type: integer, minimum: 0, maximum: 3 }
+                is_unsafe: { type: boolean }
+                reason: { type: string }
+      responses:
+        "201":
+          description: Сохранено
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [id]
+                properties:
+                  id: { type: integer, format: int64 }
+        "422": { $ref: "#/components/responses/Error" }
   /recipients/{id}/invites:
     post:
       summary: "P1: приглашение получателя (FR-P04)"
@@ -1118,6 +1266,92 @@ components:
         substitutions_blocked: { type: integer }
         runs_by_day: { type: array, items: { $ref: "#/components/schemas/CountByKey" } }
         exclusion_codes: { type: array, items: { $ref: "#/components/schemas/CountByKey" } }
+    ConsentStatus:
+      type: object
+      required: [active, version, granted_at, current_version, text]
+      properties:
+        active: { type: boolean }
+        version: { type: [string, "null"] }
+        granted_at: { type: [string, "null"], format: date-time }
+        current_version: { type: string }
+        text: { type: string }
+    ResearchExport:
+      type: object
+      required: [export_id, data_dictionary_version, min_group_size, suppressed_groups, rows]
+      properties:
+        export_id: { type: integer, format: int64 }
+        data_dictionary_version: { type: string }
+        min_group_size: { type: integer }
+        suppressed_groups: { type: integer }
+        rows:
+          type: array
+          items:
+            type: object
+            required: [research_id, event_month, occasion_type, budget_band, model_version, rules_version, numerology_used, bouquet_style, bouquet_format, rating, liked]
+            properties:
+              research_id: { type: string, format: uuid }
+              event_month: { type: string }
+              occasion_type: { type: string }
+              budget_band: { type: string }
+              model_version: { type: string }
+              rules_version: { type: string }
+              numerology_used: { type: boolean }
+              bouquet_style: { type: [string, "null"] }
+              bouquet_format: { type: [string, "null"] }
+              rating: { type: [integer, "null"] }
+              liked: { type: [boolean, "null"] }
+    ExperimentRun:
+      type: object
+      required: [id, model_version, dataset_version, split_id, seed, params, metrics, created_at]
+      properties:
+        id: { type: integer, format: int64 }
+        model_version: { type: string }
+        dataset_version: { type: string }
+        split_id: { type: string }
+        seed: { type: integer }
+        params: { type: object, additionalProperties: true }
+        metrics: { $ref: "#/components/schemas/EvalMetrics" }
+        created_at: { type: string, format: date-time }
+    EvalMetrics:
+      type: object
+      additionalProperties: true
+      properties:
+        "ndcg@5":
+          type: object
+          properties:
+            mean: { type: number }
+            ci95: { type: array, items: { type: number } }
+        unsafe_rate: { type: number }
+        unsafe_catalog_rate: { type: number }
+        budget_violations: { type: integer }
+        coverage: { type: number }
+        ece: { type: number }
+        robustness:
+          type: object
+          properties:
+            ndcg_drop: { type: number }
+            ndcg_mean: { type: number }
+            repeats: { type: integer }
+            drop_frac: { type: number }
+        test_cases: { type: integer }
+        test_recipients: { type: integer }
+        train_cases: { type: integer }
+    ExpertJudgement:
+      type: object
+      required: [id, dataset_version, case_id, recipient_snapshot, occasion_snapshot, bouquet_id, bouquet_name, grade, is_unsafe, reason, expert_id, created_at]
+      properties:
+        id: { type: integer, format: int64 }
+        dataset_version: { type: string }
+        case_id: { type: string }
+        recipient_snapshot: { type: object, additionalProperties: true }
+        occasion_snapshot: { type: object, additionalProperties: true }
+        bouquet_id: { type: integer, format: int64 }
+        bouquet_name: { type: string }
+        grade: { type: integer }
+        is_unsafe: { type: boolean }
+        reason: { type: string }
+        expert_id: { type: [integer, "null"], format: int64 }
+        created_at: { type: string, format: date-time }
     Status:
       type: object
       required: [status]

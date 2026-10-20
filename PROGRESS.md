@@ -99,6 +99,23 @@
   fallback-наборы ограничены 3 подарками с приоритетом магазина букета; название набора сохраняется после замены.
 - ADR 0008.
 
+## M6. Оценка и research — закрыта (тег `m6`)
+
+Сделано:
+- `cmd/gendraft` → `data/expert_judgements.csv` (`draft-1`: 235 пар, 48 случаев, 36 получателей), загрузка сидом.
+- `internal/eval` + `cmd/eval` (`make eval`): split по получателям, NDCG@5 с bootstrap CI, unsafe rate (разметка + Rules Engine
+  по выдаче каталога), нарушения бюджета, coverage, ECE (baseline vs Platt), robustness; запись `research.experiment_runs`
+  и `docs/eval_report.md`; нумерология выключена. На `draft-1`: unsafe 0, бюджет 0, coverage 0.44, ECE 0.50 → 0.07.
+- Research: согласие с версией текста, отзыв в один шаг (`research.revoke_consent`), research_id, экспорт без идентификаторов
+  и текста с подавлением групп < 5, data dictionary `dd-1`, сравнение запусков на одном split.
+- Экспертная разметка: `GET/POST /admin/expert-judgements` (черновик → проверенная версия).
+- `DELETE /me`: каскадное удаление аккаунта; миграция `00005_research_access.sql` (ON DELETE SET NULL для «кто сделал»,
+  роль `research_admin` для связки research_id).
+- Фронтенд: настройки дарителя (согласие/отзыв, удаление аккаунта), вкладки менеджера «Экспертная разметка» и «Оценка моделей».
+- Тесты: AC-9 (пайплайн, воспроизводимость по seed, experiment_runs), AC-10 (+ триггер БД), RM-02, RM-05, RM-06, RM-07,
+  каскад удаления аккаунта, split по получателям; e2e research.
+- `docs/model_card.md`, словарь данных экспорта, ADR 0009.
+
 ## Открытые вопросы
 1. **Docker / CI.** Локально Docker не установлен, поэтому `docker compose` и GitHub Actions не запускались.
    Нужно запушить репозиторий на GitHub и убедиться, что CI зелёный.

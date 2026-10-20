@@ -81,6 +81,7 @@ func (s *Server) Router() http.Handler {
 		r.Group(func(r chi.Router) {
 			r.Use(s.authenticate)
 			r.Get("/me", s.me)
+			r.Delete("/me", s.deleteAccount)
 
 			// Даритель (FR-P01–P03, FR-O01)
 			r.Group(func(r chi.Router) {
@@ -100,6 +101,11 @@ func (s *Server) Router() http.Handler {
 				r.Post("/gift-sets/{id}/exclude", s.excludeGiftSetItem)
 				r.Get("/offers", s.getOffers)
 				r.Post("/recommendations/{id}/feedback", s.createFeedback)
+
+				// Исследовательский режим (RM-01, RM-02): по умолчанию выключен
+				r.Get("/research/consent", s.getConsent)
+				r.Post("/research/consent", s.grantConsent)
+				r.Delete("/research/consent", s.revokeConsent)
 			})
 
 			// Флорист (FR-C01–C05)
@@ -129,6 +135,12 @@ func (s *Server) Router() http.Handler {
 				r.Get("/admin/data-quality", s.dataQuality)
 				r.Get("/admin/analytics", s.analytics)
 				r.Get("/admin/rules", s.rulesInfo)
+				r.Get("/admin/expert-judgements", s.listJudgements)
+				r.Post("/admin/expert-judgements", s.saveJudgement)
+				r.Get("/research/evaluation", s.listEvaluations)
+				r.Get("/research/evaluation/{run_id}", s.getEvaluation)
+				r.Post("/research/export", s.exportResearch)
+				r.Get("/research/data-dictionary", s.dataDictionary)
 			})
 		})
 

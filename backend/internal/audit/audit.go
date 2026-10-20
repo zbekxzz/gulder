@@ -23,6 +23,7 @@ const (
 	ConsentRevoked        = "research.consent_revoked"
 	ResearchExported      = "research.exported"
 	RecipientDeleted      = "recipient.deleted"
+	AccountDeleted        = "account.deleted"
 	ExpertJudgementStored = "expert_judgement.created"
 )
 

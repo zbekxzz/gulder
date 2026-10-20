@@ -6,6 +6,8 @@ import { FloristPage } from "./pages/florist/FloristPage";
 import { RecipientPage } from "./pages/giver/RecipientPage";
 import { RecipientsPage } from "./pages/giver/RecipientsPage";
 import { RunPage } from "./pages/giver/RunPage";
+import { SettingsPage } from "./pages/giver/SettingsPage";
+import { EvaluationTab, ExpertTab } from "./pages/manager/ResearchTabs";
 import { ManagerPage } from "./pages/manager/ManagerPage";
 import { AuthPage } from "./pages/public/LoginPage";
 
@@ -22,6 +24,11 @@ function Home() {
   const { session } = useAuth();
   return <Navigate to={session ? homeFor(session.user.role) : "/login"} replace />;
 }
+
+const managerResearchTabs = [
+  { id: "expert", label: "Экспертная разметка", render: () => <ExpertTab /> },
+  { id: "evaluation", label: "Оценка моделей", render: () => <EvaluationTab /> },
+];
 
 export const router = createBrowserRouter([
   {
@@ -55,6 +62,14 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: "/settings",
+        element: (
+          <RequireRole role="giver">
+            <SettingsPage />
+          </RequireRole>
+        ),
+      },
+      {
         path: "/florist",
         element: (
           <RequireRole role="florist">
@@ -66,7 +81,7 @@ export const router = createBrowserRouter([
         path: "/manager",
         element: (
           <RequireRole role="manager">
-            <ManagerPage />
+            <ManagerPage extraTabs={managerResearchTabs} />
           </RequireRole>
         ),
       },
