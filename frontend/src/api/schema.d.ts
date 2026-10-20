@@ -21,6 +21,308 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/auth/register": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Регистрация дарителя */
+    post: operations["register"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/auth/login": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Вход (JWT access + refresh) */
+    post: operations["login"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/auth/refresh": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Обновить токены по refresh-токену */
+    post: operations["refresh"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/me": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Текущий пользователь */
+    get: operations["me"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/recipients": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Получатели дарителя (FR-P01) */
+    get: operations["listRecipients"];
+    put?: never;
+    /** Создать получателя (FR-P01–P03) */
+    post: operations["createRecipient"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/recipients/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: components["parameters"]["Id"];
+      };
+      cookie?: never;
+    };
+    /** Профиль получателя; поля, заполненные получателем, скрыты (§13) */
+    get: operations["getRecipient"];
+    /** Обновить имя и поля профиля (upsert перечисленных ключей) */
+    put: operations["updateRecipient"];
+    post?: never;
+    /** Удалить получателя (каскадно — атрибуты, дата рождения, поводы; FR-N07) */
+    delete: operations["deleteRecipient"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/recipients/{id}/occasions": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: components["parameters"]["Id"];
+      };
+      cookie?: never;
+    };
+    /** Поводы получателя */
+    get: operations["listRecipientOccasions"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/occasions": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Создать повод (FR-O01) */
+    post: operations["createOccasion"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/occasions/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: components["parameters"]["Id"];
+      };
+      cookie?: never;
+    };
+    /** Повод */
+    get: operations["getOccasion"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/shops": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Магазины, часы работы, open_now (FR-C05, FR-L02) */
+    get: operations["listShops"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/catalog/import": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Импорт CSV флориста в свой магазин (§12, формат — docs/api.md) */
+    post: operations["importCatalog"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/catalog/bouquets": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Букеты своего магазина */
+    get: operations["listShopBouquets"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/catalog/gifts": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Подарки своего магазина */
+    get: operations["listShopGifts"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/catalog/flowers": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Цветы общего справочника и своего магазина */
+    get: operations["listFlowers"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/catalog/flowers/{id}/taxon": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: components["parameters"]["Id"];
+      };
+      cookie?: never;
+    };
+    get?: never;
+    /** Подтвердить растение — выбрать таксон (FR-C03) */
+    put: operations["confirmFlowerTaxon"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/catalog/taxa": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Справочник растений */
+    get: operations["listTaxa"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/availability/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: components["parameters"]["Id"];
+      };
+      cookie?: never;
+    };
+    get?: never;
+    /** Наличие, цена и скидка позиции своего магазина */
+    put: operations["updateAvailability"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/recipients/{id}/invites": {
     parameters: {
       query?: never;
@@ -76,6 +378,244 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
+    /** @description Сумма в тенге (до 2 знаков после точки); в коде — целые тиыны */
+    Money: number;
+    AuthResponse: {
+      access_token: string;
+      refresh_token: string;
+      expires_in: number;
+      user: components["schemas"]["User"];
+    };
+    User: {
+      /** Format: int64 */
+      id: number;
+      email: string;
+      display_name: string;
+      role: components["schemas"]["Role"];
+      /** Format: int64 */
+      shop_id: number | null;
+    };
+    /** @enum {string} */
+    Role: "giver" | "florist" | "manager";
+    /**
+     * @description «знаю» / «предполагаю» / «не знаю». unknown никогда не означает «ограничения нет»
+     * @enum {string}
+     */
+    Confidence: "know" | "assume" | "unknown";
+    /** @enum {string} */
+    Source: "giver" | "recipient" | "feedback" | "system";
+    /** @enum {string} */
+    AttributeKey:
+      | "allergies"
+      | "asthma"
+      | "pets"
+      | "scent_sensitivity"
+      | "liked_flowers"
+      | "disliked_flowers"
+      | "liked_colors"
+      | "disliked_colors"
+      | "style"
+      | "composition_format"
+      | "birth_date";
+    /** @description При confidence=unknown value не указывается; при know/assume — обязателен */
+    AttributeInput: {
+      key: components["schemas"]["AttributeKey"];
+      value?: unknown;
+      /** @enum {string} */
+      source?: "giver";
+      confidence: components["schemas"]["Confidence"];
+    };
+    Attribute: {
+      key: components["schemas"]["AttributeKey"];
+      value?: unknown;
+      source?: components["schemas"]["Source"];
+      confidence?: components["schemas"]["Confidence"];
+      /** Format: date-time */
+      updated_at?: string;
+      /** @description Заполнено получателем и скрыто от дарителя */
+      hidden?: boolean;
+    };
+    Recipient: {
+      /** Format: int64 */
+      id: number;
+      nickname: string;
+      /** Format: date-time */
+      created_at: string;
+      /** Format: date-time */
+      updated_at: string;
+      attributes?: components["schemas"]["Attribute"][];
+    };
+    /** @enum {string} */
+    OccasionType:
+      | "birthday"
+      | "anniversary"
+      | "march8"
+      | "valentine"
+      | "wedding"
+      | "apology"
+      | "gratitude"
+      | "congrats"
+      | "sympathy"
+      | "just_because";
+    OccasionInput: {
+      /** Format: int64 */
+      recipient_id: number;
+      type: components["schemas"]["OccasionType"];
+      /** @enum {string} */
+      relationship?:
+        | "partner"
+        | "spouse"
+        | "mother"
+        | "father"
+        | "relative"
+        | "friend"
+        | "colleague"
+        | "boss"
+        | "teacher"
+        | "other";
+      /** Format: date */
+      date?: string | null;
+      budget_min?: components["schemas"]["Money"];
+      budget_max: components["schemas"]["Money"];
+      /** @enum {string} */
+      place?: "home" | "office" | "restaurant" | "event" | "hospital";
+      formality?: number | null;
+      /** @enum {string} */
+      emotion_goal?: "joy" | "gratitude" | "romance" | "support" | "respect" | "apology";
+      /** @default false */
+      numerology_enabled: boolean;
+    };
+    Occasion: {
+      /** Format: int64 */
+      id: number;
+      /** Format: int64 */
+      recipient_id: number;
+      type: string;
+      relationship?: string;
+      /** Format: date */
+      date: string | null;
+      budget_min: components["schemas"]["Money"];
+      budget_max: components["schemas"]["Money"];
+      place?: string;
+      formality: number | null;
+      emotion_goal?: string;
+      numerology_enabled: boolean;
+      /** Format: date-time */
+      created_at: string;
+    };
+    Shop: {
+      /** Format: int64 */
+      id: number;
+      code?: string;
+      name: string;
+      address: string;
+      lat: number;
+      lon: number;
+      timezone: string;
+      /** @description {"mon":[["09:00","21:00"]]}; нет дня — выходной */
+      opening_hours: {
+        [key: string]: string[][];
+      };
+      open_now: boolean;
+    };
+    ImportReport: {
+      imported: number;
+      updated: number;
+      errors: {
+        line: number;
+        field: string;
+        message: string;
+      }[];
+    };
+    Offer: {
+      price: components["schemas"]["Money"];
+      discount_price: components["schemas"]["Money"] | null;
+      /** Format: date-time */
+      discount_from: string | null;
+      /** Format: date-time */
+      discount_until: string | null;
+    };
+    Availability: {
+      /** Format: int64 */
+      id: number;
+      in_stock: boolean;
+      quantity: number | null;
+    };
+    CompositionItem: {
+      /** Format: int64 */
+      flower_id: number;
+      code: string;
+      trade_name: string;
+      color: string;
+      genus: string;
+      stems: number;
+      taxon_confirmed: boolean;
+    };
+    ShopBouquet: {
+      /** Format: int64 */
+      id: number;
+      sku: string;
+      name: string;
+      packaging: string;
+      style: string;
+      composition_format: string;
+      image_url: string;
+      active: boolean;
+      availability: components["schemas"]["Availability"];
+      offer: components["schemas"]["Offer"];
+      items: components["schemas"]["CompositionItem"][];
+    };
+    ShopGift: {
+      /** Format: int64 */
+      id: number;
+      sku: string;
+      name: string;
+      /** @enum {string} */
+      category: "card" | "sweets" | "soft_toy" | "fragrance" | "jewelry" | "candle" | "other";
+      composition: string;
+      /** @description null = состав неизвестен */
+      allergen_codes: string[] | null;
+      /** @enum {string} */
+      scent: "none" | "low" | "medium" | "strong";
+      pet_hazard: boolean | null;
+      active: boolean;
+      availability: components["schemas"]["Availability"];
+      offer: components["schemas"]["Offer"];
+    };
+    Flower: {
+      /** Format: int64 */
+      id: number;
+      code: string;
+      trade_name: string;
+      color: string;
+      /** @enum {string} */
+      scent: "none" | "low" | "medium" | "strong";
+      /** Format: int64 */
+      taxon_id: number | null;
+      genus: string;
+      taxon_confirmed: boolean;
+      shared: boolean;
+    };
+    /** @enum {string} */
+    Toxicity: "none" | "mild" | "moderate" | "severe" | "unknown";
+    Taxon: {
+      /** Format: int64 */
+      id: number;
+      scientific_name: string;
+      genus: string;
+      family: string;
+      pet_toxicity: {
+        [key: string]: components["schemas"]["Toxicity"];
+      };
+      /** @enum {string} */
+      pollen: "none" | "low" | "medium" | "strong";
+      allergen_codes: string[];
+      aspca_url: string | null;
+      image_url: string | null;
+      image_license: string | null;
+      image_author: string | null;
+      verified: boolean;
+    };
     Status: {
       status: string;
     };
@@ -90,6 +630,24 @@ export interface components {
     };
   };
   responses: {
+    /** @description Ошибка */
+    Error: {
+      headers: {
+        [name: string]: unknown;
+      };
+      content: {
+        "application/json": components["schemas"]["Error"];
+      };
+    };
+    /** @description Токены и пользователь */
+    Auth: {
+      headers: {
+        [name: string]: unknown;
+      };
+      content: {
+        "application/json": components["schemas"]["AuthResponse"];
+      };
+    };
     /** @description Функция релиза 2.0 */
     NotImplemented: {
       headers: {
@@ -127,6 +685,494 @@ export interface operations {
           "application/json": components["schemas"]["Status"];
         };
       };
+    };
+  };
+  register: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** Format: email */
+          email: string;
+          password: string;
+          display_name?: string;
+        };
+      };
+    };
+    responses: {
+      201: components["responses"]["Auth"];
+      409: components["responses"]["Error"];
+      422: components["responses"]["Error"];
+    };
+  };
+  login: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          email: string;
+          password: string;
+        };
+      };
+    };
+    responses: {
+      200: components["responses"]["Auth"];
+      401: components["responses"]["Error"];
+    };
+  };
+  refresh: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          refresh_token: string;
+        };
+      };
+    };
+    responses: {
+      200: components["responses"]["Auth"];
+      401: components["responses"]["Error"];
+    };
+  };
+  me: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["User"];
+        };
+      };
+      401: components["responses"]["Error"];
+    };
+  };
+  listRecipients: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            items: components["schemas"]["Recipient"][];
+          };
+        };
+      };
+    };
+  };
+  createRecipient: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          nickname: string;
+          attributes?: components["schemas"]["AttributeInput"][];
+        };
+      };
+    };
+    responses: {
+      /** @description Создан */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Recipient"];
+        };
+      };
+      422: components["responses"]["Error"];
+    };
+  };
+  getRecipient: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: components["parameters"]["Id"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Recipient"];
+        };
+      };
+      404: components["responses"]["Error"];
+    };
+  };
+  updateRecipient: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: components["parameters"]["Id"];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          nickname?: string;
+          attributes?: components["schemas"]["AttributeInput"][];
+        };
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Recipient"];
+        };
+      };
+      404: components["responses"]["Error"];
+      409: components["responses"]["Error"];
+      422: components["responses"]["Error"];
+    };
+  };
+  deleteRecipient: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: components["parameters"]["Id"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Удалён */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: components["responses"]["Error"];
+    };
+  };
+  listRecipientOccasions: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: components["parameters"]["Id"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            items: components["schemas"]["Occasion"][];
+          };
+        };
+      };
+    };
+  };
+  createOccasion: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["OccasionInput"];
+      };
+    };
+    responses: {
+      /** @description Создан */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Occasion"];
+        };
+      };
+      404: components["responses"]["Error"];
+      422: components["responses"]["Error"];
+    };
+  };
+  getOccasion: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: components["parameters"]["Id"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Occasion"];
+        };
+      };
+      404: components["responses"]["Error"];
+    };
+  };
+  listShops: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            items: components["schemas"]["Shop"][];
+          };
+        };
+      };
+    };
+  };
+  importCatalog: {
+    parameters: {
+      query: {
+        kind: "flowers" | "bouquets" | "gifts";
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "multipart/form-data": {
+          /** Format: binary */
+          file: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Построчный отчёт */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ImportReport"];
+        };
+      };
+      400: components["responses"]["Error"];
+      422: components["responses"]["Error"];
+    };
+  };
+  listShopBouquets: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            items: components["schemas"]["ShopBouquet"][];
+          };
+        };
+      };
+    };
+  };
+  listShopGifts: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            items: components["schemas"]["ShopGift"][];
+          };
+        };
+      };
+    };
+  };
+  listFlowers: {
+    parameters: {
+      query?: {
+        unconfirmed?: boolean;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            items: components["schemas"]["Flower"][];
+          };
+        };
+      };
+    };
+  };
+  confirmFlowerTaxon: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: components["parameters"]["Id"];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** Format: int64 */
+          taxon_id: number;
+        };
+      };
+    };
+    responses: {
+      /** @description Подтверждено */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: components["responses"]["Error"];
+    };
+  };
+  listTaxa: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            items: components["schemas"]["Taxon"][];
+          };
+        };
+      };
+    };
+  };
+  updateAvailability: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: components["parameters"]["Id"];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          in_stock: boolean;
+          quantity?: number | null;
+          price?: components["schemas"]["Money"];
+          discount_price?: components["schemas"]["Money"];
+          /** Format: date-time */
+          discount_from?: string | null;
+          /** Format: date-time */
+          discount_until?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description Обновлено */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: components["responses"]["Error"];
+      422: components["responses"]["Error"];
     };
   };
   createInvite: {

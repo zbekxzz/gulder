@@ -251,7 +251,7 @@ func InsertBouquet(ctx context.Context, tx pgx.Tx, shopID int64, r BouquetRow, u
 			return false, fmt.Errorf("insert composition %s: %w", r.SKU, err)
 		}
 		if tag.RowsAffected() == 0 {
-			return false, fmt.Errorf("bouquet %s: unknown flower code %q", r.SKU, it.FlowerCode)
+			return false, &ImportError{Msg: fmt.Sprintf("неизвестный код цветка %q (доступны общий справочник и цветы вашего магазина)", it.FlowerCode)}
 		}
 	}
 	if _, err := tx.Exec(ctx, `
