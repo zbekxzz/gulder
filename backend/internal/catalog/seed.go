@@ -66,6 +66,8 @@ func parseFile[T any](dir, name string, parse func(io.Reader) ([]T, []RowError, 
 	return rows, nil
 }
 
+// seedTaxa загружает справочник растений. В отличие от каталога, справочник ведётся только в репозитории
+// (data/plant_taxa.csv, сверка с ASPCA — M7), поэтому изменённые строки обновляются; неизменные не трогаются.
 func seedTaxa(ctx context.Context, tx pgx.Tx, dir string) (int, error) {
 	rows, err := parseFile(dir, "plant_taxa.csv", ParseTaxa)
 	if err != nil {
@@ -77,7 +79,17 @@ func seedTaxa(ctx context.Context, tx pgx.Tx, dir string) (int, error) {
 			INSERT INTO plant_taxa (gbif_key, scientific_name, genus, family, pet_toxicity, aspca_url,
 			                        pollen_level, allergen_codes, image_url, image_license, image_author, toxicity_verified)
 			VALUES ($1,$2,$3,$4,$5,NULLIF($6,''),$7,$8,NULLIF($9,''),NULLIF($10,''),NULLIF($11,''),$12)
-			ON CONFLICT (scientific_name) DO NOTHING`,
+			ON CONFLICT (scientific_name) DO UPDATE SET
+			    genus = EXCLUDED.genus, family = EXCLUDED.family, pet_toxicity = EXCLUDED.pet_toxicity,
+			    aspca_url = EXCLUDED.aspca_url, pollen_level = EXCLUDED.pollen_level, allergen_codes = EXCLUDED.allergen_codes,
+			    gbif_key = EXCLUDED.gbif_key, image_url = EXCLUDED.image_url, image_license = EXCLUDED.image_license,
+			    image_author = EXCLUDED.image_author, toxicity_verified = EXCLUDED.toxicity_verified
+			WHERE (plant_taxa.genus, plant_taxa.family, plant_taxa.pet_toxicity, plant_taxa.aspca_url, plant_taxa.pollen_level,
+			       plant_taxa.allergen_codes, plant_taxa.gbif_key, plant_taxa.image_url, plant_taxa.image_license,
+			       plant_taxa.image_author, plant_taxa.toxicity_verified)
+			  IS DISTINCT FROM (EXCLUDED.genus, EXCLUDED.family, EXCLUDED.pet_toxicity, EXCLUDED.aspca_url, EXCLUDED.pollen_level,
+			       EXCLUDED.allergen_codes, EXCLUDED.gbif_key, EXCLUDED.image_url, EXCLUDED.image_license,
+			       EXCLUDED.image_author, EXCLUDED.toxicity_verified)`,
 			r.GBIFKey, r.Taxon.ScientificName, r.Taxon.Genus, r.Taxon.Family, r.Taxon.PetToxicity, r.Taxon.ASPCAURL,
 			string(r.Taxon.Pollen), nonNil(r.Taxon.AllergenCodes), r.Taxon.ImageURL, r.Taxon.ImageLicense, r.Taxon.ImageAuthor, r.Verified)
 		if err != nil {

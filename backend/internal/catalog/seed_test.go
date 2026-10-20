@@ -58,3 +58,33 @@ func TestSeedIsIdempotentAndKeepsManualEdits(t *testing.T) {
 	assert.Positive(t, active)
 	assert.Positive(t, expired)
 }
+
+// M7: справочник обновляется сидом из репозитория (сверка ASPCA), и каждая строка, кроме спорной, сверена.
+func TestTaxaVerifiedAgainstASPCA(t *testing.T) {
+	st, _ := testdb.New(t)
+	ctx := context.Background()
+	require.NoError(t, st.InTx(ctx, func(tx pgx.Tx) error {
+		_, err := catalog.Seed(ctx, tx, dataDir)
+		return err
+	}))
+	// откатить сверку вручную — повторный сид восстанавливает значения из репозитория
+	_, err := st.Pool.Exec(ctx, `UPDATE plant_taxa SET toxicity_verified = false, aspca_url = NULL WHERE genus = 'Rosa'`)
+	require.NoError(t, err)
+	var rep catalog.SeedReport
+	require.NoError(t, st.InTx(ctx, func(tx pgx.Tx) error {
+		var err error
+		rep, err = catalog.Seed(ctx, tx, dataDir)
+		return err
+	}))
+	assert.Equal(t, 1, rep.Taxa)
+
+	var withoutURL int
+	var unverified []string
+	require.NoError(t, st.Pool.QueryRow(ctx, `SELECT count(*) FROM plant_taxa WHERE aspca_url IS NULL`).Scan(&withoutURL))
+	rows, err := st.Pool.Query(ctx, `SELECT genus FROM plant_taxa WHERE NOT toxicity_verified ORDER BY genus`)
+	require.NoError(t, err)
+	unverified, err = pgx.CollectRows(rows, pgx.RowTo[string])
+	require.NoError(t, err)
+	assert.Zero(t, withoutURL, "у каждой строки есть aspca_url")
+	assert.Equal(t, []string{"Gypsophila"}, unverified, "спорная строка ждёт проверки человеком (docs/aspca_verification.md)")
+}

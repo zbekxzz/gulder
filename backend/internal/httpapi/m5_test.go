@@ -147,7 +147,8 @@ func TestManagerScreensData(t *testing.T) {
 	dq := e.do(http.MethodGet, "/api/v1/admin/data-quality", manager, nil)
 	require.Equal(t, http.StatusOK, dq.Status)
 	body := dq.JSON(t)
-	assert.Len(t, body["taxa_without_aspca"], 16, "справочник ещё не сверен с ASPCA")
+	assert.Empty(t, body["taxa_without_aspca"], "M7: у всех строк есть ссылка ASPCA")
+	assert.Len(t, body["taxa_unverified"], 1, "спорная гипсофила ждёт проверки человеком")
 	assert.Len(t, body["unconfirmed_flowers"], 2)
 	assert.NotEmpty(t, body["gifts_without_composition"])
 
