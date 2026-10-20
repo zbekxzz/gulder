@@ -14,7 +14,7 @@ import (
 
 // SeedReport — сколько записей добавлено сидом.
 type SeedReport struct {
-	Taxa, Shops, Flowers, Bouquets, Gifts, NumerologyRows int
+	Taxa, Shops, Flowers, Bouquets, Gifts, NumerologyRows, Judgements int
 }
 
 // Seed загружает data/*.csv. Идемпотентен и не затирает ручные правки: существующие
@@ -38,6 +38,9 @@ func Seed(ctx context.Context, tx pgx.Tx, dataDir string) (SeedReport, error) {
 		return rep, err
 	}
 	if rep.NumerologyRows, err = seedNumerology(ctx, tx, dataDir); err != nil {
+		return rep, err
+	}
+	if rep.Judgements, err = seedJudgements(ctx, tx, dataDir); err != nil {
 		return rep, err
 	}
 	return rep, nil
@@ -383,4 +386,29 @@ func nonNil(s []string) []string {
 		return []string{}
 	}
 	return s
+}
+
+// seedJudgements загружает экспертный набор, если файл есть. Существующие (версия, случай, букет) не трогаются.
+func seedJudgements(ctx context.Context, tx pgx.Tx, dir string) (int, error) {
+	if _, err := os.Stat(filepath.Join(dir, "expert_judgements.csv")); errors.Is(err, os.ErrNotExist) {
+		return 0, nil
+	}
+	rows, err := parseFile(dir, "expert_judgements.csv", ParseJudgements)
+	if err != nil {
+		return 0, err
+	}
+	n := 0
+	for _, r := range rows {
+		tag, err := tx.Exec(ctx, `
+			INSERT INTO expert_judgements (dataset_version, case_id, recipient_snapshot, occasion_snapshot, bouquet_id, grade, is_unsafe, reason)
+			SELECT $1, $2, $3, $4, b.id, $7, $8, $9 FROM bouquets b JOIN shops s ON s.id = b.shop_id
+			 WHERE s.code = $5 AND b.sku = $6
+			ON CONFLICT (dataset_version, case_id, bouquet_id) DO NOTHING`,
+			r.DatasetVersion, r.CaseID, r.RecipientSnapshot, r.OccasionSnapshot, r.ShopCode, r.SKU, r.Grade, r.IsUnsafe, r.Reason)
+		if err != nil {
+			return n, fmt.Errorf("insert judgement line %d: %w", r.Line, err)
+		}
+		n += int(tag.RowsAffected())
+	}
+	return n, nil
 }

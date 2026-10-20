@@ -542,3 +542,48 @@ func ParseNumerology(r io.Reader) ([]NumerologyRow, []RowError, error) {
 	})
 	return out, errs, nil
 }
+
+// JudgementRow — строка expert_judgements.csv (§12, RM-07).
+type JudgementRow struct {
+	Line              int
+	DatasetVersion    string
+	CaseID            string
+	RecipientSnapshot json.RawMessage
+	OccasionSnapshot  json.RawMessage
+	ShopCode, SKU     string
+	Grade             int
+	IsUnsafe          bool
+	Reason            string
+}
+
+// ParseJudgements разбирает экспертный набор.
+func ParseJudgements(r io.Reader) ([]JudgementRow, []RowError, error) {
+	t, err := readTable(r, []string{"dataset_version", "case_id", "recipient_snapshot", "occasion_snapshot", "shop_code", "sku", "grade", "is_unsafe", "reason"})
+	if err != nil {
+		return nil, nil, err
+	}
+	var out []JudgementRow
+	var errs []RowError
+	t.each(&errs, func(r *row) {
+		j := JudgementRow{
+			Line: r.line, DatasetVersion: r.required("dataset_version"), CaseID: r.required("case_id"),
+			RecipientSnapshot: json.RawMessage(r.required("recipient_snapshot")), OccasionSnapshot: json.RawMessage(r.required("occasion_snapshot")),
+			ShopCode: r.required("shop_code"), SKU: r.required("sku"), Grade: r.intVal("grade", 0), Reason: r.required("reason"),
+		}
+		if j.Grade > 3 {
+			r.fail("grade", "оценка 0–3")
+		}
+		f := false
+		j.IsUnsafe = *r.boolean("is_unsafe", &f)
+		if j.IsUnsafe && j.Grade != 0 {
+			r.fail("grade", "опасная пара (is_unsafe) размечается grade=0")
+		}
+		for col, raw := range map[string]json.RawMessage{"recipient_snapshot": j.RecipientSnapshot, "occasion_snapshot": j.OccasionSnapshot} {
+			if !json.Valid(raw) {
+				r.fail(col, "ожидается JSON")
+			}
+		}
+		out = append(out, j)
+	})
+	return out, errs, nil
+}
