@@ -1,0 +1,17 @@
+scientific_name,genus,family,tox_cat,tox_dog,tox_horse,pollen,allergen_codes,aspca_url,gbif_key,image_url,image_license,image_author,verified
+Rosa,Rosa,Rosaceae,none,none,none,low,,,,,,,false
+Lilium,Lilium,Liliaceae,severe,none,none,strong,,,,,,,false
+Tulipa,Tulipa,Liliaceae,mild,mild,mild,low,,,,,,,false
+Chrysanthemum,Chrysanthemum,Asteraceae,mild,mild,mild,medium,,,,,,,false
+Helianthus annuus,Helianthus,Asteraceae,none,none,none,strong,,,,,,,false
+Gerbera jamesonii,Gerbera,Asteraceae,none,none,none,low,,,,,,,false
+Dianthus caryophyllus,Dianthus,Caryophyllaceae,mild,mild,mild,low,,,,,,,false
+Phalaenopsis,Phalaenopsis,Orchidaceae,none,none,none,none,,,,,,,false
+Hydrangea macrophylla,Hydrangea,Hydrangeaceae,moderate,moderate,moderate,low,,,,,,,false
+Paeonia,Paeonia,Paeoniaceae,mild,mild,mild,medium,,,,,,,false
+Narcissus,Narcissus,Amaryllidaceae,moderate,moderate,moderate,medium,,,,,,,false
+Alstroemeria,Alstroemeria,Alstroemeriaceae,none,none,none,low,,,,,,,false
+Gypsophila paniculata,Gypsophila,Caryophyllaceae,mild,mild,unknown,low,,,,,,,false
+Freesia,Freesia,Iridaceae,none,none,none,medium,,,,,,,false
+Eucalyptus,Eucalyptus,Myrtaceae,mild,mild,mild,low,,,,,,,false
+Hyacinthus orientalis,Hyacinthus,Asparagaceae,mild,mild,mild,medium,,,,,,,false

@@ -1,0 +1,73 @@
+openapi: 3.1.0
+info:
+  title: Gulder API
+  version: 0.1.0
+  description: |
+    Контракт API Gulder (§14 TASK.md). TS-типы фронтенда генерируются из этого файла
+    (`make gen-api`), руками не дублируются.
+    Ошибки: `{"error":{"code","message","details"}}`. Без Authorization → 401, не та роль → 403,
+    чужой ресурс → 404. Эндпоинты релиза 2.0 (P1) отвечают 501.
+servers:
+  - url: /api/v1
+paths:
+  /healthz:
+    get:
+      summary: Живость
+      operationId: healthz
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Status" }
+  /recipients/{id}/invites:
+    post:
+      summary: "P1: приглашение получателя (FR-P04)"
+      operationId: createInvite
+      parameters: [{ $ref: "#/components/parameters/Id" }]
+      responses:
+        "501": { $ref: "#/components/responses/NotImplemented" }
+  /public/invites/{token}/answers:
+    post:
+      summary: "P1: ответы получателя по ссылке (FR-P04, FR-P05)"
+      operationId: submitInviteAnswers
+      parameters:
+        - { name: token, in: path, required: true, schema: { type: string } }
+      responses:
+        "501": { $ref: "#/components/responses/NotImplemented" }
+  /orders:
+    post:
+      summary: "P1: заказ"
+      operationId: createOrder
+      responses:
+        "501": { $ref: "#/components/responses/NotImplemented" }
+components:
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema: { type: integer, format: int64 }
+  responses:
+    NotImplemented:
+      description: Функция релиза 2.0
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+  schemas:
+    Status:
+      type: object
+      required: [status]
+      properties:
+        status: { type: string }
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code: { type: string }
+            message: { type: string }
+            details: { type: object, additionalProperties: true }

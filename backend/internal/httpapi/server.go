@@ -1,0 +1,89 @@
+// Package httpapi — HTTP-слой: роутинг, хендлеры, DTO и маппинг ошибок (§14).
+package httpapi
+
+import (
+	"context"
+	"net/http"
+	"time"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/cors"
+
+	"github.com/zbekxzz/gulder/backend/internal/config"
+	"github.com/zbekxzz/gulder/backend/internal/store"
+)
+
+// Server собирает зависимости хендлеров.
+type Server struct {
+	cfg   config.Config
+	store *store.Store
+	now   func() time.Time
+}
+
+// Option настраивает Server (для тестов).
+type Option func(*Server)
+
+// WithClock подменяет часы.
+func WithClock(now func() time.Time) Option { return func(s *Server) { s.now = now } }
+
+// New создаёт сервер.
+func New(cfg config.Config, st *store.Store, opts ...Option) *Server {
+	s := &Server{cfg: cfg, store: st, now: time.Now}
+	for _, o := range opts {
+		o(s)
+	}
+	return s
+}
+
+// Router возвращает корневой http.Handler.
+func (s *Server) Router() http.Handler {
+	r := chi.NewRouter()
+	r.Use(requestIDMiddleware, accessLog, recoverer)
+	r.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   s.cfg.CORSOrigins,
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Authorization", "Content-Type", "X-Request-ID"},
+		ExposedHeaders:   []string{"X-Request-ID"},
+		AllowCredentials: false,
+		MaxAge:           300,
+	}))
+
+	r.Get("/healthz", s.healthz)
+	r.Get("/readyz", s.readyz)
+
+	r.Route("/api/v1", func(r chi.Router) {
+		r.Get("/healthz", s.healthz)
+
+		// P1 (релиз 2.0): контракт заложен, реализация после M8 (§6).
+		r.Post("/recipients/{id}/invites", s.notImplemented)
+		r.Post("/public/invites/{token}/answers", s.notImplemented)
+		r.Post("/orders", s.notImplemented)
+	})
+	r.NotFound(func(w http.ResponseWriter, r *http.Request) { writeError(w, r, errNotFound) })
+	return r
+}
+
+func (s *Server) healthz(w http.ResponseWriter, _ *http.Request) {
+	writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
+}
+
+// readyz: БД доступна и миграции применены (§18.4).
+func (s *Server) readyz(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+	defer cancel()
+	if err := s.store.Pool.Ping(ctx); err != nil {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]string{"status": "db_unavailable"})
+		return
+	}
+	ok, err := s.store.MigrationsCurrent(ctx)
+	if err != nil || !ok {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]string{"status": "migrations_pending"})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]string{"status": "ready"})
+}
+
+func (s *Server) notImplemented(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("X-Robots-Tag", "noindex")
+	writeError(w, r, errNotImplemented)
+}
