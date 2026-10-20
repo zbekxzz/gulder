@@ -9,17 +9,364 @@ info:
     чужой ресурс → 404. Эндпоинты релиза 2.0 (P1) отвечают 501.
 servers:
   - url: /api/v1
+security:
+  - bearer: []
 paths:
   /healthz:
     get:
       summary: Живость
       operationId: healthz
+      security: []
       responses:
         "200":
           description: OK
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Status" }
+  /auth/register:
+    post:
+      summary: Регистрация дарителя
+      operationId: register
+      tags: [auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string, minLength: 8, maxLength: 128 }
+                display_name: { type: string, maxLength: 100 }
+      responses:
+        "201": { $ref: "#/components/responses/Auth" }
+        "409": { $ref: "#/components/responses/Error" }
+        "422": { $ref: "#/components/responses/Error" }
+  /auth/login:
+    post:
+      summary: Вход (JWT access + refresh)
+      operationId: login
+      tags: [auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string }
+                password: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/Auth" }
+        "401": { $ref: "#/components/responses/Error" }
+  /auth/refresh:
+    post:
+      summary: Обновить токены по refresh-токену
+      operationId: refresh
+      tags: [auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refresh_token]
+              properties:
+                refresh_token: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/Auth" }
+        "401": { $ref: "#/components/responses/Error" }
+  /me:
+    get:
+      summary: Текущий пользователь
+      operationId: me
+      tags: [auth]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/User" }
+        "401": { $ref: "#/components/responses/Error" }
+  /recipients:
+    get:
+      summary: Получатели дарителя (FR-P01)
+      operationId: listRecipients
+      tags: [giver]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items: { type: array, items: { $ref: "#/components/schemas/Recipient" } }
+    post:
+      summary: Создать получателя (FR-P01–P03)
+      operationId: createRecipient
+      tags: [giver]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nickname]
+              properties:
+                nickname: { type: string, minLength: 1, maxLength: 80 }
+                attributes: { type: array, items: { $ref: "#/components/schemas/AttributeInput" } }
+      responses:
+        "201":
+          description: Создан
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Recipient" }
+        "422": { $ref: "#/components/responses/Error" }
+  /recipients/{id}:
+    parameters: [{ $ref: "#/components/parameters/Id" }]
+    get:
+      summary: Профиль получателя; поля, заполненные получателем, скрыты (§13)
+      operationId: getRecipient
+      tags: [giver]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Recipient" }
+        "404": { $ref: "#/components/responses/Error" }
+    put:
+      summary: Обновить имя и поля профиля (upsert перечисленных ключей)
+      operationId: updateRecipient
+      tags: [giver]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nickname: { type: string, minLength: 1, maxLength: 80 }
+                attributes: { type: array, items: { $ref: "#/components/schemas/AttributeInput" } }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Recipient" }
+        "404": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+        "422": { $ref: "#/components/responses/Error" }
+    delete:
+      summary: Удалить получателя (каскадно — атрибуты, дата рождения, поводы; FR-N07)
+      operationId: deleteRecipient
+      tags: [giver]
+      responses:
+        "204": { description: Удалён }
+        "404": { $ref: "#/components/responses/Error" }
+  /recipients/{id}/occasions:
+    parameters: [{ $ref: "#/components/parameters/Id" }]
+    get:
+      summary: Поводы получателя
+      operationId: listRecipientOccasions
+      tags: [giver]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items: { type: array, items: { $ref: "#/components/schemas/Occasion" } }
+  /occasions:
+    post:
+      summary: Создать повод (FR-O01)
+      operationId: createOccasion
+      tags: [giver]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/OccasionInput" }
+      responses:
+        "201":
+          description: Создан
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Occasion" }
+        "404": { $ref: "#/components/responses/Error" }
+        "422": { $ref: "#/components/responses/Error" }
+  /occasions/{id}:
+    parameters: [{ $ref: "#/components/parameters/Id" }]
+    get:
+      summary: Повод
+      operationId: getOccasion
+      tags: [giver]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Occasion" }
+        "404": { $ref: "#/components/responses/Error" }
+  /shops:
+    get:
+      summary: Магазины, часы работы, open_now (FR-C05, FR-L02)
+      operationId: listShops
+      tags: [catalog]
+      security: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items: { type: array, items: { $ref: "#/components/schemas/Shop" } }
+  /catalog/import:
+    post:
+      summary: Импорт CSV флориста в свой магазин (§12, формат — docs/api.md)
+      operationId: importCatalog
+      tags: [florist]
+      parameters:
+        - name: kind
+          in: query
+          required: true
+          schema: { type: string, enum: [flowers, bouquets, gifts] }
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file: { type: string, format: binary }
+      responses:
+        "200":
+          description: Построчный отчёт
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ImportReport" }
+        "400": { $ref: "#/components/responses/Error" }
+        "422": { $ref: "#/components/responses/Error" }
+  /catalog/bouquets:
+    get:
+      summary: Букеты своего магазина
+      operationId: listShopBouquets
+      tags: [florist]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items: { type: array, items: { $ref: "#/components/schemas/ShopBouquet" } }
+  /catalog/gifts:
+    get:
+      summary: Подарки своего магазина
+      operationId: listShopGifts
+      tags: [florist]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items: { type: array, items: { $ref: "#/components/schemas/ShopGift" } }
+  /catalog/flowers:
+    get:
+      summary: Цветы общего справочника и своего магазина
+      operationId: listFlowers
+      tags: [florist]
+      parameters:
+        - name: unconfirmed
+          in: query
+          schema: { type: boolean }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items: { type: array, items: { $ref: "#/components/schemas/Flower" } }
+  /catalog/flowers/{id}/taxon:
+    parameters: [{ $ref: "#/components/parameters/Id" }]
+    put:
+      summary: Подтвердить растение — выбрать таксон (FR-C03)
+      operationId: confirmFlowerTaxon
+      tags: [florist]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [taxon_id]
+              properties:
+                taxon_id: { type: integer, format: int64 }
+      responses:
+        "204": { description: Подтверждено }
+        "404": { $ref: "#/components/responses/Error" }
+  /catalog/taxa:
+    get:
+      summary: Справочник растений
+      operationId: listTaxa
+      tags: [florist, manager]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items: { type: array, items: { $ref: "#/components/schemas/Taxon" } }
+  /availability/{id}:
+    parameters: [{ $ref: "#/components/parameters/Id" }]
+    put:
+      summary: Наличие, цена и скидка позиции своего магазина
+      operationId: updateAvailability
+      tags: [florist]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [in_stock]
+              properties:
+                in_stock: { type: boolean }
+                quantity: { type: [integer, "null"], minimum: 0 }
+                price: { $ref: "#/components/schemas/Money" }
+                discount_price: { $ref: "#/components/schemas/Money" }
+                discount_from: { type: [string, "null"], format: date-time }
+                discount_until: { type: [string, "null"], format: date-time }
+      responses:
+        "204": { description: Обновлено }
+        "404": { $ref: "#/components/responses/Error" }
+        "422": { $ref: "#/components/responses/Error" }
   /recipients/{id}/invites:
     post:
       summary: "P1: приглашение получателя (FR-P04)"
@@ -31,6 +378,7 @@ paths:
     post:
       summary: "P1: ответы получателя по ссылке (FR-P04, FR-P05)"
       operationId: submitInviteAnswers
+      security: []
       parameters:
         - { name: token, in: path, required: true, schema: { type: string } }
       responses:
@@ -48,13 +396,243 @@ components:
       in: path
       required: true
       schema: { type: integer, format: int64 }
+  securitySchemes:
+    bearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
   responses:
+    Error:
+      description: Ошибка
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Auth:
+      description: Токены и пользователь
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/AuthResponse" }
     NotImplemented:
       description: Функция релиза 2.0
       content:
         application/json:
           schema: { $ref: "#/components/schemas/Error" }
   schemas:
+    Money:
+      type: number
+      description: Сумма в тенге (до 2 знаков после точки); в коде — целые тиыны
+    AuthResponse:
+      type: object
+      required: [access_token, refresh_token, expires_in, user]
+      properties:
+        access_token: { type: string }
+        refresh_token: { type: string }
+        expires_in: { type: integer }
+        user: { $ref: "#/components/schemas/User" }
+    User:
+      type: object
+      required: [id, email, display_name, role, shop_id]
+      properties:
+        id: { type: integer, format: int64 }
+        email: { type: string }
+        display_name: { type: string }
+        role: { $ref: "#/components/schemas/Role" }
+        shop_id: { type: [integer, "null"], format: int64 }
+    Role:
+      type: string
+      enum: [giver, florist, manager]
+    Confidence:
+      type: string
+      enum: [know, assume, unknown]
+      description: «знаю» / «предполагаю» / «не знаю». unknown никогда не означает «ограничения нет»
+    Source:
+      type: string
+      enum: [giver, recipient, feedback, system]
+    AttributeKey:
+      type: string
+      enum: [allergies, asthma, pets, scent_sensitivity, liked_flowers, disliked_flowers, liked_colors, disliked_colors, style, composition_format, birth_date]
+    AttributeInput:
+      type: object
+      required: [key, confidence]
+      description: При confidence=unknown value не указывается; при know/assume — обязателен
+      properties:
+        key: { $ref: "#/components/schemas/AttributeKey" }
+        value: {}
+        source: { type: string, enum: [giver] }
+        confidence: { $ref: "#/components/schemas/Confidence" }
+    Attribute:
+      type: object
+      required: [key]
+      properties:
+        key: { $ref: "#/components/schemas/AttributeKey" }
+        value: {}
+        source: { $ref: "#/components/schemas/Source" }
+        confidence: { $ref: "#/components/schemas/Confidence" }
+        updated_at: { type: string, format: date-time }
+        hidden: { type: boolean, description: Заполнено получателем и скрыто от дарителя }
+    Recipient:
+      type: object
+      required: [id, nickname, created_at, updated_at]
+      properties:
+        id: { type: integer, format: int64 }
+        nickname: { type: string }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+        attributes: { type: array, items: { $ref: "#/components/schemas/Attribute" } }
+    OccasionType:
+      type: string
+      enum: [birthday, anniversary, march8, valentine, wedding, apology, gratitude, congrats, sympathy, just_because]
+    OccasionInput:
+      type: object
+      required: [recipient_id, type, budget_max]
+      properties:
+        recipient_id: { type: integer, format: int64 }
+        type: { $ref: "#/components/schemas/OccasionType" }
+        relationship: { type: string, enum: [partner, spouse, mother, father, relative, friend, colleague, boss, teacher, other] }
+        date: { type: [string, "null"], format: date }
+        budget_min: { $ref: "#/components/schemas/Money" }
+        budget_max: { $ref: "#/components/schemas/Money" }
+        place: { type: string, enum: [home, office, restaurant, event, hospital] }
+        formality: { type: [integer, "null"], minimum: 1, maximum: 5 }
+        emotion_goal: { type: string, enum: [joy, gratitude, romance, support, respect, apology] }
+        numerology_enabled: { type: boolean, default: false }
+    Occasion:
+      type: object
+      required: [id, recipient_id, type, date, budget_min, budget_max, formality, numerology_enabled, created_at]
+      properties:
+        id: { type: integer, format: int64 }
+        recipient_id: { type: integer, format: int64 }
+        type: { type: string }
+        relationship: { type: string }
+        date: { type: [string, "null"], format: date }
+        budget_min: { $ref: "#/components/schemas/Money" }
+        budget_max: { $ref: "#/components/schemas/Money" }
+        place: { type: string }
+        formality: { type: [integer, "null"] }
+        emotion_goal: { type: string }
+        numerology_enabled: { type: boolean }
+        created_at: { type: string, format: date-time }
+    Shop:
+      type: object
+      required: [id, name, address, lat, lon, timezone, opening_hours, open_now]
+      properties:
+        id: { type: integer, format: int64 }
+        code: { type: string }
+        name: { type: string }
+        address: { type: string }
+        lat: { type: number }
+        lon: { type: number }
+        timezone: { type: string }
+        opening_hours:
+          type: object
+          description: '{"mon":[["09:00","21:00"]]}; нет дня — выходной'
+          additionalProperties:
+            type: array
+            items: { type: array, items: { type: string }, minItems: 2, maxItems: 2 }
+        open_now: { type: boolean }
+    ImportReport:
+      type: object
+      required: [imported, updated, errors]
+      properties:
+        imported: { type: integer }
+        updated: { type: integer }
+        errors:
+          type: array
+          items:
+            type: object
+            required: [line, field, message]
+            properties:
+              line: { type: integer }
+              field: { type: string }
+              message: { type: string }
+    Offer:
+      type: object
+      required: [price, discount_price, discount_from, discount_until]
+      properties:
+        price: { $ref: "#/components/schemas/Money" }
+        discount_price: { oneOf: [{ $ref: "#/components/schemas/Money" }, { type: "null" }] }
+        discount_from: { type: [string, "null"], format: date-time }
+        discount_until: { type: [string, "null"], format: date-time }
+    Availability:
+      type: object
+      required: [id, in_stock, quantity]
+      properties:
+        id: { type: integer, format: int64 }
+        in_stock: { type: boolean }
+        quantity: { type: [integer, "null"] }
+    CompositionItem:
+      type: object
+      required: [flower_id, code, trade_name, color, genus, stems, taxon_confirmed]
+      properties:
+        flower_id: { type: integer, format: int64 }
+        code: { type: string }
+        trade_name: { type: string }
+        color: { type: string }
+        genus: { type: string }
+        stems: { type: integer }
+        taxon_confirmed: { type: boolean }
+    ShopBouquet:
+      type: object
+      required: [id, sku, name, packaging, style, composition_format, image_url, active, availability, offer, items]
+      properties:
+        id: { type: integer, format: int64 }
+        sku: { type: string }
+        name: { type: string }
+        packaging: { type: string }
+        style: { type: string }
+        composition_format: { type: string }
+        image_url: { type: string }
+        active: { type: boolean }
+        availability: { $ref: "#/components/schemas/Availability" }
+        offer: { $ref: "#/components/schemas/Offer" }
+        items: { type: array, items: { $ref: "#/components/schemas/CompositionItem" } }
+    ShopGift:
+      type: object
+      required: [id, sku, name, category, composition, allergen_codes, scent, pet_hazard, active, availability, offer]
+      properties:
+        id: { type: integer, format: int64 }
+        sku: { type: string }
+        name: { type: string }
+        category: { type: string, enum: [card, sweets, soft_toy, fragrance, jewelry, candle, other] }
+        composition: { type: string }
+        allergen_codes: { type: [array, "null"], items: { type: string }, description: null = состав неизвестен }
+        scent: { type: string, enum: [none, low, medium, strong] }
+        pet_hazard: { type: [boolean, "null"] }
+        active: { type: boolean }
+        availability: { $ref: "#/components/schemas/Availability" }
+        offer: { $ref: "#/components/schemas/Offer" }
+    Flower:
+      type: object
+      required: [id, code, trade_name, color, scent, taxon_id, genus, taxon_confirmed, shared]
+      properties:
+        id: { type: integer, format: int64 }
+        code: { type: string }
+        trade_name: { type: string }
+        color: { type: string }
+        scent: { type: string, enum: [none, low, medium, strong] }
+        taxon_id: { type: [integer, "null"], format: int64 }
+        genus: { type: string }
+        taxon_confirmed: { type: boolean }
+        shared: { type: boolean }
+    Toxicity:
+      type: string
+      enum: [none, mild, moderate, severe, unknown]
+    Taxon:
+      type: object
+      required: [id, scientific_name, genus, family, pet_toxicity, pollen, allergen_codes, aspca_url, image_url, image_license, image_author, verified]
+      properties:
+        id: { type: integer, format: int64 }
+        scientific_name: { type: string }
+        genus: { type: string }
+        family: { type: string }
+        pet_toxicity: { type: object, additionalProperties: { $ref: "#/components/schemas/Toxicity" } }
+        pollen: { type: string, enum: [none, low, medium, strong] }
+        allergen_codes: { type: array, items: { type: string } }
+        aspca_url: { type: [string, "null"] }
+        image_url: { type: [string, "null"] }
+        image_license: { type: [string, "null"] }
+        image_author: { type: [string, "null"] }
+        verified: { type: boolean }
     Status:
       type: object
       required: [status]
