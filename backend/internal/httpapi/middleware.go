@@ -7,8 +7,13 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
+
+	"github.com/go-chi/chi/v5"
+
+	"github.com/zbekxzz/gulder/backend/internal/metrics"
 )
 
 type ctxKey int
@@ -92,6 +97,20 @@ type statusRecorder struct {
 func (s *statusRecorder) WriteHeader(code int) {
 	s.status = code
 	s.ResponseWriter.WriteHeader(code)
+}
+
+// observe пишет латентность и код ответа в Prometheus по шаблону маршрута (без значений параметров).
+func observe(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		rec := &statusRecorder{ResponseWriter: w, status: http.StatusOK}
+		next.ServeHTTP(rec, r)
+		route := "unmatched"
+		if rc := chi.RouteContext(r.Context()); rc != nil && rc.RoutePattern() != "" {
+			route = rc.RoutePattern()
+		}
+		metrics.HTTPDuration.WithLabelValues(r.Method, route, strconv.Itoa(rec.status)).Observe(time.Since(start).Seconds())
+	})
 }
 
 // accessLog пишет одну запись на запрос без персональных данных и геолокации (§18.4).

@@ -15,6 +15,7 @@ import (
 	"slices"
 
 	"github.com/zbekxzz/gulder/backend/internal/domain"
+	"github.com/zbekxzz/gulder/backend/internal/metrics"
 	"github.com/zbekxzz/gulder/backend/internal/ranking"
 	"github.com/zbekxzz/gulder/backend/internal/recommend"
 	"github.com/zbekxzz/gulder/backend/internal/rules"
@@ -298,6 +299,7 @@ func Assemble(ctx context.Context, gen Generator, c *recommend.Context, budget d
 		for attempt := 0; attempt < 2 && len(res.Sets) < MinSets; attempt++ {
 			proposal, err := gen.Propose(ctx, prompt)
 			if err != nil {
+				metrics.LLMErrors.Inc()
 				slog.WarnContext(ctx, "assistant: llm failed, using fallback", "err", err, "attempt", attempt+1)
 				break
 			}

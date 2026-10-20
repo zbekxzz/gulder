@@ -9,6 +9,7 @@ import (
 
 	"github.com/zbekxzz/gulder/backend/internal/assistant"
 	"github.com/zbekxzz/gulder/backend/internal/domain"
+	"github.com/zbekxzz/gulder/backend/internal/metrics"
 	"github.com/zbekxzz/gulder/backend/internal/recommend"
 	"github.com/zbekxzz/gulder/backend/internal/rules"
 )
@@ -114,6 +115,9 @@ func (s *Server) createGiftSets(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		writeError(w, r, err)
 		return
+	}
+	for _, set := range res.Sets {
+		metrics.GiftSets.WithLabelValues(set.Generator).Inc()
 	}
 	body := map[string]any{"sets": out, "generator": res.Generator}
 	if len(out) < assistant.MinSets {

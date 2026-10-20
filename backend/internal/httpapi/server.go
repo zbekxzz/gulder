@@ -57,7 +57,7 @@ func New(cfg config.Config, st *store.Store, opts ...Option) *Server {
 // Router возвращает корневой http.Handler.
 func (s *Server) Router() http.Handler {
 	r := chi.NewRouter()
-	r.Use(requestIDMiddleware, accessLog, recoverer)
+	r.Use(requestIDMiddleware, observe, accessLog, recoverer)
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   s.cfg.CORSOrigins,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
@@ -74,9 +74,13 @@ func (s *Server) Router() http.Handler {
 		r.Get("/healthz", s.healthz)
 		r.Get("/shops", s.listShops)
 
-		r.Post("/auth/register", s.register)
-		r.Post("/auth/login", s.login)
-		r.Post("/auth/refresh", s.refresh)
+		// §18.5: /auth/* — по IP
+		r.Group(func(r chi.Router) {
+			r.Use(s.limitByIP(s.cfg.RateLimitAuth))
+			r.Post("/auth/register", s.register)
+			r.Post("/auth/login", s.login)
+			r.Post("/auth/refresh", s.refresh)
+		})
 
 		r.Group(func(r chi.Router) {
 			r.Use(s.authenticate)
@@ -94,10 +98,10 @@ func (s *Server) Router() http.Handler {
 				r.Get("/recipients/{id}/occasions", s.listRecipientOccasions)
 				r.Post("/occasions", s.createOccasion)
 				r.Get("/occasions/{id}", s.getOccasion)
-				r.Post("/recommendations", s.createRecommendations)
+				r.With(s.limitByUser(s.cfg.RateLimitHeavy)).Post("/recommendations", s.createRecommendations)
 				r.Get("/recommendations/{id}", s.getRecommendations)
 				r.Get("/recipients/{id}/recommendations", s.listRecipientRecommendations)
-				r.Post("/gift-sets", s.createGiftSets)
+				r.With(s.limitByUser(s.cfg.RateLimitHeavy)).Post("/gift-sets", s.createGiftSets)
 				r.Post("/gift-sets/{id}/exclude", s.excludeGiftSetItem)
 				r.Get("/offers", s.getOffers)
 				r.Post("/recommendations/{id}/feedback", s.createFeedback)
@@ -146,7 +150,7 @@ func (s *Server) Router() http.Handler {
 
 		// P1 (релиз 2.0): контракт заложен, реализация после M8 (§6).
 		r.Post("/recipients/{id}/invites", s.notImplemented)
-		r.Post("/public/invites/{token}/answers", s.notImplemented)
+		r.With(s.limitByToken(s.cfg.RateLimitInvite)).Post("/public/invites/{token}/answers", s.notImplemented)
 		r.Post("/orders", s.notImplemented)
 	})
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) { writeError(w, r, errNotFound) })

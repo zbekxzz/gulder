@@ -33,6 +33,11 @@ type env struct {
 
 func newEnv(t *testing.T, opts ...httpapi.Option) *env {
 	t.Helper()
+	return newEnvWithConfig(t, nil, opts...)
+}
+
+func newEnvWithConfig(t *testing.T, tweak func(*config.Config), opts ...httpapi.Option) *env {
+	t.Helper()
 	st, _ := testdb.New(t)
 	ctx := context.Background()
 	require.NoError(t, st.InTx(ctx, func(tx pgx.Tx) error {
@@ -46,6 +51,9 @@ func newEnv(t *testing.T, opts ...httpapi.Option) *env {
 		Env: "test", JWTSecret: []byte(strings.Repeat("k", 32)),
 		AccessTokenTTL: time.Hour, RefreshTokenTTL: 24 * time.Hour,
 		CORSOrigins: []string{"http://localhost:5173"},
+	}
+	if tweak != nil {
+		tweak(&cfg)
 	}
 	// фиксированное «сейчас»: понедельник 20.10.2026 12:00 по Алматы — скидки сида действуют
 	now := time.Date(2026, 10, 19, 12, 0, 0, 0, time.FixedZone("ALMT", 5*3600))

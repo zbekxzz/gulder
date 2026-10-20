@@ -14,6 +14,7 @@ import (
 
 	"github.com/zbekxzz/gulder/backend/internal/config"
 	"github.com/zbekxzz/gulder/backend/internal/httpapi"
+	"github.com/zbekxzz/gulder/backend/internal/metrics"
 	"github.com/zbekxzz/gulder/backend/internal/ranking"
 	"github.com/zbekxzz/gulder/backend/internal/store"
 )
@@ -52,6 +53,16 @@ func run() error {
 		ReadTimeout:       30 * time.Second,
 		WriteTimeout:      90 * time.Second, // ассистент: LLM 20 с + повтор
 		IdleTimeout:       120 * time.Second,
+	}
+	// /metrics — на отдельном адресе, не публикуется наружу через reverse proxy (§18.4)
+	if cfg.MetricsAddr != "" {
+		metricsSrv := &http.Server{Addr: cfg.MetricsAddr, Handler: metrics.Handler(), ReadHeaderTimeout: 5 * time.Second}
+		go func() {
+			if err := metricsSrv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+				slog.Error("metrics server stopped", "err", err)
+			}
+		}()
+		defer func() { _ = metricsSrv.Close() }()
 	}
 	errCh := make(chan error, 1)
 	go func() {
