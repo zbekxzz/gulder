@@ -11,26 +11,34 @@ import (
 
 	"github.com/zbekxzz/gulder/backend/internal/auth"
 	"github.com/zbekxzz/gulder/backend/internal/config"
+	"github.com/zbekxzz/gulder/backend/internal/ranking"
 	"github.com/zbekxzz/gulder/backend/internal/store"
 )
 
 // Server собирает зависимости хендлеров.
 type Server struct {
-	cfg    config.Config
-	store  *store.Store
-	issuer *auth.Issuer
-	now    func() time.Time
+	cfg     config.Config
+	store   *store.Store
+	issuer  *auth.Issuer
+	ranking ranking.Config
+	now     func() time.Time
 }
 
 // Option настраивает Server (для тестов).
 type Option func(*Server)
+
+// WithRanking задаёт веса ranker'а (по умолчанию — встроенный ranking.yaml).
+func WithRanking(cfg ranking.Config) Option { return func(s *Server) { s.ranking = cfg } }
 
 // WithClock подменяет часы.
 func WithClock(now func() time.Time) Option { return func(s *Server) { s.now = now } }
 
 // New создаёт сервер.
 func New(cfg config.Config, st *store.Store, opts ...Option) *Server {
-	s := &Server{cfg: cfg, store: st, now: time.Now, issuer: auth.NewIssuer(cfg.JWTSecret, cfg.AccessTokenTTL, cfg.RefreshTokenTTL)}
+	s := &Server{
+		cfg: cfg, store: st, now: time.Now, ranking: ranking.DefaultConfig(),
+		issuer: auth.NewIssuer(cfg.JWTSecret, cfg.AccessTokenTTL, cfg.RefreshTokenTTL),
+	}
 	for _, o := range opts {
 		o(s)
 	}
@@ -76,6 +84,9 @@ func (s *Server) Router() http.Handler {
 				r.Get("/recipients/{id}/occasions", s.listRecipientOccasions)
 				r.Post("/occasions", s.createOccasion)
 				r.Get("/occasions/{id}", s.getOccasion)
+				r.Post("/recommendations", s.createRecommendations)
+				r.Get("/recommendations/{id}", s.getRecommendations)
+				r.Get("/recipients/{id}/recommendations", s.listRecipientRecommendations)
 			})
 
 			// Флорист (FR-C01–C05)
@@ -92,6 +103,13 @@ func (s *Server) Router() http.Handler {
 			r.Group(func(r chi.Router) {
 				r.Use(requireRole(auth.RoleFlorist, auth.RoleManager))
 				r.Get("/catalog/taxa", s.listTaxa)
+			})
+
+			// Менеджер (FR-N03)
+			r.Group(func(r chi.Router) {
+				r.Use(requireRole(auth.RoleManager))
+				r.Get("/admin/numerology", s.getNumerology)
+				r.Put("/admin/numerology", s.putNumerology)
 			})
 		})
 
