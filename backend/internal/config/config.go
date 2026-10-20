@@ -40,7 +40,7 @@ func Load() (Config, error) {
 		JWTSecret:       []byte(os.Getenv("JWT_SECRET")),
 		CORSOrigins:     splitList(get("CORS_ORIGINS", "http://localhost:5173")),
 		AnthropicAPIKey: os.Getenv("ANTHROPIC_API_KEY"),
-		LLMModel:        get("LLM_MODEL", "claude-sonnet-5-5"),
+		LLMModel:        get("LLM_MODEL", "claude-opus-5-5"),
 		DataDir:         get("DATA_DIR", "../data"),
 		RankingConfig:   os.Getenv("RANKING_CONFIG"),
 	}

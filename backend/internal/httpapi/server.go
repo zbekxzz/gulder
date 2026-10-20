@@ -9,6 +9,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
 
+	"github.com/zbekxzz/gulder/backend/internal/assistant"
 	"github.com/zbekxzz/gulder/backend/internal/auth"
 	"github.com/zbekxzz/gulder/backend/internal/config"
 	"github.com/zbekxzz/gulder/backend/internal/ranking"
@@ -17,11 +18,12 @@ import (
 
 // Server собирает зависимости хендлеров.
 type Server struct {
-	cfg     config.Config
-	store   *store.Store
-	issuer  *auth.Issuer
-	ranking ranking.Config
-	now     func() time.Time
+	cfg       config.Config
+	store     *store.Store
+	issuer    *auth.Issuer
+	ranking   ranking.Config
+	generator assistant.Generator // nil — детерминированный fallback (§9.4)
+	now       func() time.Time
 }
 
 // Option настраивает Server (для тестов).
@@ -29,6 +31,9 @@ type Option func(*Server)
 
 // WithRanking задаёт веса ranker'а (по умолчанию — встроенный ranking.yaml).
 func WithRanking(cfg ranking.Config) Option { return func(s *Server) { s.ranking = cfg } }
+
+// WithGenerator задаёт генератор наборов (LLM или мок в тестах).
+func WithGenerator(g assistant.Generator) Option { return func(s *Server) { s.generator = g } }
 
 // WithClock подменяет часы.
 func WithClock(now func() time.Time) Option { return func(s *Server) { s.now = now } }
@@ -38,6 +43,10 @@ func New(cfg config.Config, st *store.Store, opts ...Option) *Server {
 	s := &Server{
 		cfg: cfg, store: st, now: time.Now, ranking: ranking.DefaultConfig(),
 		issuer: auth.NewIssuer(cfg.JWTSecret, cfg.AccessTokenTTL, cfg.RefreshTokenTTL),
+	}
+	// Ключ LLM есть — ассистент на Claude; нет — детерминированный fallback (локально, в тестах и CI).
+	if cfg.AnthropicAPIKey != "" {
+		s.generator = assistant.NewClaude(cfg.AnthropicAPIKey, cfg.LLMModel, cfg.LLMTimeout)
 	}
 	for _, o := range opts {
 		o(s)
@@ -87,6 +96,9 @@ func (s *Server) Router() http.Handler {
 				r.Post("/recommendations", s.createRecommendations)
 				r.Get("/recommendations/{id}", s.getRecommendations)
 				r.Get("/recipients/{id}/recommendations", s.listRecipientRecommendations)
+				r.Post("/gift-sets", s.createGiftSets)
+				r.Post("/gift-sets/{id}/exclude", s.excludeGiftSetItem)
+				r.Get("/offers", s.getOffers)
 			})
 
 			// Флорист (FR-C01–C05)

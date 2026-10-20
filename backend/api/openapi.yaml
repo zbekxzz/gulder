@@ -461,6 +461,96 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/NumerologyVersion" }
         "422": { $ref: "#/components/responses/Error" }
+  /gift-sets:
+    post:
+      summary: AI-ассистент — 2–3 набора «букет + подарки» в пределах бюджета (FR-G01–G03)
+      operationId: createGiftSets
+      tags: [giver]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [run_id, budget]
+              properties:
+                run_id: { type: integer, format: int64 }
+                budget: { $ref: "#/components/schemas/Money" }
+      responses:
+        "201":
+          description: Наборы
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [sets, generator]
+                properties:
+                  sets: { type: array, items: { $ref: "#/components/schemas/GiftSet" } }
+                  generator: { type: string, enum: [llm, fallback] }
+                  message: { type: string }
+        "200":
+          description: Ни один букет не помещается в бюджет (sets пуст, есть message)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [sets, generator]
+                properties:
+                  sets: { type: array, items: { $ref: "#/components/schemas/GiftSet" } }
+                  generator: { type: string, enum: [llm, fallback] }
+                  message: { type: string }
+        "404": { $ref: "#/components/responses/Error" }
+        "422": { $ref: "#/components/responses/Error" }
+  /gift-sets/{id}/exclude:
+    parameters: [{ $ref: "#/components/parameters/Id" }]
+    post:
+      summary: Исключить позицию из набора и подобрать замену (FR-G04)
+      operationId: excludeGiftSetItem
+      tags: [giver]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [item_type, item_id]
+              properties:
+                item_type: { type: string, enum: [bouquet, gift] }
+                item_id: { type: integer, format: int64 }
+      responses:
+        "201":
+          description: Новый набор (parent_set_id — исходный)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [set]
+                properties:
+                  set: { $ref: "#/components/schemas/GiftSet" }
+                  message: { type: string, description: Замену подобрать не удалось — набор без позиции }
+        "404": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+        "422": { $ref: "#/components/responses/Error" }
+  /offers:
+    get:
+      summary: Фильтры «Рядом», «Дешевле», «Со скидкой» поверх допущенных Rules Engine вариантов (§10)
+      description: lat/lon используются только в памяти запроса и не сохраняются (FR-L01).
+      operationId: getOffers
+      tags: [giver]
+      parameters:
+        - { name: filter, in: query, required: true, schema: { type: string }, description: "nearby,cheaper,discount через запятую" }
+        - { name: run_id, in: query, required: true, schema: { type: integer, format: int64 } }
+        - { name: lat, in: query, schema: { type: number } }
+        - { name: lon, in: query, schema: { type: number } }
+        - { name: bouquet_id, in: query, schema: { type: integer, format: int64 }, description: Текущий вариант для «Дешевле» }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OffersResponse" }
+        "404": { $ref: "#/components/responses/Error" }
+        "422": { $ref: "#/components/responses/Error" }
   /recipients/{id}/invites:
     post:
       summary: "P1: приглашение получателя (FR-P04)"
@@ -826,6 +916,63 @@ components:
         created_by: { type: [integer, "null"], format: int64 }
         created_at: { type: string, format: date-time }
         rows: { type: array, items: { $ref: "#/components/schemas/NumerologyRow" } }
+    GiftSetGift:
+      type: object
+      required: [id, name, category, shop_id, price, discount_price, discount_until]
+      properties:
+        id: { type: integer, format: int64 }
+        name: { type: string }
+        category: { type: string }
+        shop_id: { type: integer, format: int64 }
+        price: { $ref: "#/components/schemas/Money" }
+        discount_price: { oneOf: [{ $ref: "#/components/schemas/Money" }, { type: "null" }] }
+        discount_until: { type: [string, "null"], format: date-time }
+    GiftSet:
+      type: object
+      required: [id, run_id, parent_set_id, title, generator, budget, total_price, budget_left, bouquet, gifts, reasons, warnings, missing_info, excluded_gift_ids, excluded_bouquet_ids]
+      properties:
+        id: { type: integer, format: int64 }
+        run_id: { type: integer, format: int64 }
+        parent_set_id: { type: [integer, "null"], format: int64 }
+        title: { type: string }
+        generator: { type: string, enum: [llm, fallback] }
+        budget: { $ref: "#/components/schemas/Money" }
+        total_price: { $ref: "#/components/schemas/Money" }
+        budget_left: { $ref: "#/components/schemas/Money" }
+        bouquet: { $ref: "#/components/schemas/RecommendationCard" }
+        gifts: { type: array, items: { $ref: "#/components/schemas/GiftSetGift" } }
+        reasons: { type: array, items: { type: string } }
+        warnings: { type: array, items: { $ref: "#/components/schemas/GiverReason" } }
+        missing_info: { type: array, items: { type: string } }
+        excluded_gift_ids: { type: array, items: { type: integer, format: int64 } }
+        excluded_bouquet_ids: { type: array, items: { type: integer, format: int64 } }
+    OfferItem:
+      allOf:
+        - { $ref: "#/components/schemas/RecommendationCard" }
+        - type: object
+          properties:
+            price_diff: { $ref: "#/components/schemas/Money" }
+    OffersResponse:
+      type: object
+      required: [filters, items, gifts]
+      properties:
+        filters: { type: array, items: { type: string } }
+        items: { type: array, items: { $ref: "#/components/schemas/OfferItem" } }
+        gifts:
+          type: array
+          items:
+            type: object
+            required: [id, name, category, shop_id, price, discount_price, discount_until, warnings]
+            properties:
+              id: { type: integer, format: int64 }
+              name: { type: string }
+              category: { type: string }
+              shop_id: { type: integer, format: int64 }
+              price: { $ref: "#/components/schemas/Money" }
+              discount_price: { oneOf: [{ $ref: "#/components/schemas/Money" }, { type: "null" }] }
+              discount_until: { type: [string, "null"], format: date-time }
+              warnings: { type: array, items: { $ref: "#/components/schemas/GiverReason" } }
+        message: { type: string }
     Status:
       type: object
       required: [status]
