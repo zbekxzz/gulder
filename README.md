@@ -37,6 +37,9 @@ make seed              # загрузить демо-каталог из data/*.
 | `LLM_TIMEOUT` | `20s` | Таймаут запроса к LLM |
 | `DATA_DIR` | `../data` | Каталог CSV для сида |
 | `RANKING_CONFIG` | встроенный | Путь к `ranking.yaml` с весами |
+| `METRICS_ADDR` | `:9090` | Отдельный адрес `/metrics` (Prometheus), наружу не публикуется |
+| `RATE_LIMIT_AUTH`, `RATE_LIMIT_HEAVY`, `RATE_LIMIT_INVITE` | `30`, `30`, `10` | Запросов в минуту (IP / пользователь / токен); `0` — выключить |
+| `DOMAIN`, `POSTGRES_PASSWORD` | — | Только прод (`docker-compose.prod.yml`), см. [runbook](docs/runbook.md) |
 | `TEST_DATABASE_URL` | — | Для тестов: готовый PostgreSQL вместо testcontainers |
 | `E2E_DATABASE_URL` / `E2E_BASE_URL` | — | Для Playwright: своя БД или уже поднятый стек |
 
@@ -44,6 +47,10 @@ make seed              # загрузить демо-каталог из data/*.
 
 `make help` — полный список. Основные: `make test` (Go + vitest + Playwright), `make lint`,
 `make vuln`, `make eval`, `make gen-api` (TS-типы из `backend/api/openapi.yaml`).
+
+## Прод
+
+Развёртывание на одном хосте с TLS (Caddy), бэкапы и восстановление — [docs/runbook.md](docs/runbook.md).
 
 ## Структура
 
