@@ -1,0 +1,114 @@
+# CI (§18.1): golangci-lint → go test -race -cover → go build → govulncheck →
+# npm lint → vitest → npm build → миграции up/down/up → Playwright на поднятом compose.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 2s --health-timeout 3s --health-retries 30
+    env:
+      TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: backend/go.mod
+          cache-dependency-path: backend/go.sum
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v8
+        with:
+          version: v2.15.0
+          working-directory: backend
+      - name: go test
+        run: go test ./... -race -cover -coverprofile=coverage.out
+      - name: rules coverage ≥ 90% (M2)
+        run: |
+          if ! ls internal/rules/*.go >/dev/null 2>&1; then echo "rules: not yet implemented"; exit 0; fi
+          go test ./internal/rules/ -coverprofile=rules.out >/dev/null
+          pct=$(go tool cover -func=rules.out | awk '/^total:/ {sub("%","",$3); print $3}')
+          echo "internal/rules coverage: ${pct}%"
+          awk -v p="$pct" 'BEGIN { exit (p >= 90) ? 0 : 1 }'
+      - name: go build
+        run: go build ./...
+      - name: govulncheck
+        run: go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
+      - name: migrations up → down → up on a clean database
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/migrations_check?sslmode=disable
+        run: |
+          PGPASSWORD=postgres psql -h localhost -U postgres -c "CREATE DATABASE migrations_check"
+          go run ./cmd/migrate up
+          go run ./cmd/migrate reset
+          go run ./cmd/migrate up
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - name: API types are generated from openapi.yaml
+        run: npm run gen:api && git diff --exit-code src/api/schema.d.ts
+      - run: npm run lint
+      - run: npx vitest run
+      - run: npm run build
+
+  e2e:
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: docker compose up
+        run: docker compose up -d --build --wait
+      - name: seed
+        run: docker compose exec -T backend /app/seed -data /app/data
+      - name: playwright
+        working-directory: frontend
+        env:
+          E2E_BASE_URL: http://localhost:5173
+        run: |
+          npm ci --no-audit --no-fund
+          npx playwright install --with-deps chromium
+          npx playwright test
+      - name: compose logs on failure
+        if: failure()
+        run: docker compose logs --tail=200
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: frontend/playwright-report
