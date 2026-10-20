@@ -6,7 +6,7 @@ RUN go mod download
 COPY backend/ ./
 RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/ ./cmd/...
 
-FROM alpine:3.22
+FROM alpine:3.24
 RUN apk add --no-cache ca-certificates tzdata && adduser -D -u 10001 app
 WORKDIR /app
 COPY --from=build /out/ /app/
