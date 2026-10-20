@@ -1,0 +1,40 @@
+version: "2"
+
+linters:
+  default: standard # errcheck, govet, ineffassign, staticcheck, unused
+  enable:
+    - revive
+    - gosec
+    - errorlint
+    - sqlclosecheck
+    - bodyclose
+    - misspell
+  settings:
+    revive:
+      rules:
+        - name: exported
+        - name: package-comments
+        - name: var-naming
+        - name: indent-error-flow
+        - name: errorf
+        - name: error-return
+        - name: error-strings
+        - name: receiver-naming
+        - name: unused-parameter
+          disabled: true
+    gosec:
+      excludes:
+        - G115 # integer overflow conversions: суммы в тиынах проверяются явно
+  exclusions:
+    rules:
+      - path: _test\.go
+        linters: [gosec, revive]
+
+formatters:
+  enable:
+    - gofumpt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/zbekxzz/gulder
