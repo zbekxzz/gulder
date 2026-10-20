@@ -396,6 +396,62 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/gift-sets": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** AI-ассистент — 2–3 набора «букет + подарки» в пределах бюджета (FR-G01–G03) */
+    post: operations["createGiftSets"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/gift-sets/{id}/exclude": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: components["parameters"]["Id"];
+      };
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Исключить позицию из набора и подобрать замену (FR-G04) */
+    post: operations["excludeGiftSetItem"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/offers": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Фильтры «Рядом», «Дешевле», «Со скидкой» поверх допущенных Rules Engine вариантов (§10)
+     * @description lat/lon используются только в памяти запроса и не сохраняются (FR-L01).
+     */
+    get: operations["getOffers"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/recipients/{id}/invites": {
     parameters: {
       query?: never;
@@ -786,6 +842,60 @@ export interface components {
       /** Format: date-time */
       created_at: string;
       rows?: components["schemas"]["NumerologyRow"][];
+    };
+    GiftSetGift: {
+      /** Format: int64 */
+      id: number;
+      name: string;
+      category: string;
+      /** Format: int64 */
+      shop_id: number;
+      price: components["schemas"]["Money"];
+      discount_price: components["schemas"]["Money"] | null;
+      /** Format: date-time */
+      discount_until: string | null;
+    };
+    GiftSet: {
+      /** Format: int64 */
+      id: number;
+      /** Format: int64 */
+      run_id: number;
+      /** Format: int64 */
+      parent_set_id: number | null;
+      title: string;
+      /** @enum {string} */
+      generator: "llm" | "fallback";
+      budget: components["schemas"]["Money"];
+      total_price: components["schemas"]["Money"];
+      budget_left: components["schemas"]["Money"];
+      bouquet: components["schemas"]["RecommendationCard"];
+      gifts: components["schemas"]["GiftSetGift"][];
+      reasons: string[];
+      warnings: components["schemas"]["GiverReason"][];
+      missing_info: string[];
+      excluded_gift_ids: number[];
+      excluded_bouquet_ids: number[];
+    };
+    OfferItem: components["schemas"]["RecommendationCard"] & {
+      price_diff?: components["schemas"]["Money"];
+    };
+    OffersResponse: {
+      filters: string[];
+      items: components["schemas"]["OfferItem"][];
+      gifts: {
+        /** Format: int64 */
+        id: number;
+        name: string;
+        category: string;
+        /** Format: int64 */
+        shop_id: number;
+        price: components["schemas"]["Money"];
+        discount_price: components["schemas"]["Money"] | null;
+        /** Format: date-time */
+        discount_until: string | null;
+        warnings: components["schemas"]["GiverReason"][];
+      }[];
+      message?: string;
     };
     Status: {
       status: string;
@@ -1475,6 +1585,123 @@ export interface operations {
           "application/json": components["schemas"]["NumerologyVersion"];
         };
       };
+      422: components["responses"]["Error"];
+    };
+  };
+  createGiftSets: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** Format: int64 */
+          run_id: number;
+          budget: components["schemas"]["Money"];
+        };
+      };
+    };
+    responses: {
+      /** @description Ни один букет не помещается в бюджет (sets пуст, есть message) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            sets: components["schemas"]["GiftSet"][];
+            /** @enum {string} */
+            generator: "llm" | "fallback";
+            message?: string;
+          };
+        };
+      };
+      /** @description Наборы */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            sets: components["schemas"]["GiftSet"][];
+            /** @enum {string} */
+            generator: "llm" | "fallback";
+            message?: string;
+          };
+        };
+      };
+      404: components["responses"]["Error"];
+      422: components["responses"]["Error"];
+    };
+  };
+  excludeGiftSetItem: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: components["parameters"]["Id"];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** @enum {string} */
+          item_type: "bouquet" | "gift";
+          /** Format: int64 */
+          item_id: number;
+        };
+      };
+    };
+    responses: {
+      /** @description Новый набор (parent_set_id — исходный) */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            set: components["schemas"]["GiftSet"];
+            /** @description Замену подобрать не удалось — набор без позиции */
+            message?: string;
+          };
+        };
+      };
+      404: components["responses"]["Error"];
+      409: components["responses"]["Error"];
+      422: components["responses"]["Error"];
+    };
+  };
+  getOffers: {
+    parameters: {
+      query: {
+        /** @description nearby,cheaper,discount через запятую */
+        filter: string;
+        run_id: number;
+        lat?: number;
+        lon?: number;
+        /** @description Текущий вариант для «Дешевле» */
+        bouquet_id?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["OffersResponse"];
+        };
+      };
+      404: components["responses"]["Error"];
       422: components["responses"]["Error"];
     };
   };

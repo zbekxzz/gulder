@@ -33,7 +33,7 @@ make seed              # загрузить демо-каталог из data/*.
 | `ACCESS_TOKEN_TTL`, `REFRESH_TOKEN_TTL` | `15m`, `720h` | Время жизни токенов |
 | `CORS_ORIGINS` | `http://localhost:5173` | Разрешённые origin через запятую |
 | `ANTHROPIC_API_KEY` | пусто | Ключ LLM-ассистента; без него работает детерминированный fallback |
-| `LLM_MODEL` | `claude-sonnet-5-5` | Модель ассистента |
+| `LLM_MODEL` | `claude-opus-5-5` | Модель ассистента |
 | `LLM_TIMEOUT` | `20s` | Таймаут запроса к LLM |
 | `DATA_DIR` | `../data` | Каталог CSV для сида |
 | `RANKING_CONFIG` | встроенный | Путь к `ranking.yaml` с весами |
