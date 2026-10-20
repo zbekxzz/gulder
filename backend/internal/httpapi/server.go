@@ -99,6 +99,7 @@ func (s *Server) Router() http.Handler {
 				r.Post("/gift-sets", s.createGiftSets)
 				r.Post("/gift-sets/{id}/exclude", s.excludeGiftSetItem)
 				r.Get("/offers", s.getOffers)
+				r.Post("/recommendations/{id}/feedback", s.createFeedback)
 			})
 
 			// Флорист (FR-C01–C05)
@@ -117,11 +118,17 @@ func (s *Server) Router() http.Handler {
 				r.Get("/catalog/taxa", s.listTaxa)
 			})
 
+			// FR-S01: замены проверяют и флорист, и даритель
+			r.With(requireRole(auth.RoleFlorist, auth.RoleGiver)).Post("/bouquets/{id}/substitutions/validate", s.validateSubstitution)
+
 			// Менеджер (FR-N03)
 			r.Group(func(r chi.Router) {
 				r.Use(requireRole(auth.RoleManager))
 				r.Get("/admin/numerology", s.getNumerology)
 				r.Put("/admin/numerology", s.putNumerology)
+				r.Get("/admin/data-quality", s.dataQuality)
+				r.Get("/admin/analytics", s.analytics)
+				r.Get("/admin/rules", s.rulesInfo)
 			})
 		})
 

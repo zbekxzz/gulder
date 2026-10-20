@@ -32,6 +32,7 @@ const (
 	MaxGiftCandidates    = 30
 	MinSets              = 2
 	MaxSets              = 3
+	MaxGiftsPerSet       = 3 // больше трёх дополнений — уже не «набор», а корзина
 )
 
 // ProposedSet — набор, предложенный генератором (LLM или fallback).
@@ -367,7 +368,7 @@ func (p *pool) fillGifts(b domain.Bouquet, kept []domain.GiftItem, left domain.M
 		used[g.Category] = true
 	}
 	try := func(g scoredGift) {
-		if used[g.gift.Category] || g.gift.Price > left {
+		if len(chosen) >= MaxGiftsPerSet || used[g.gift.Category] || g.gift.Price > left {
 			return
 		}
 		candidate := append(slices.Clone(chosen), g.gift)
@@ -378,17 +379,24 @@ func (p *pool) fillGifts(b domain.Bouquet, kept []domain.GiftItem, left domain.M
 		used[g.gift.Category] = true
 		left -= g.gift.Price
 	}
+	// подарки из магазина букета — впереди: набор удобнее забрать в одном месте
+	byValue := slices.Clone(p.gifts)
+	slices.SortStableFunc(byValue, func(a, c scoredGift) int {
+		if sa, sc := a.gift.ShopID == b.ShopID, c.gift.ShopID == b.ShopID; sa != sc {
+			if sa {
+				return -1
+			}
+			return 1
+		}
+		return cmp.Compare(c.relevance/float64(c.gift.Price), a.relevance/float64(a.gift.Price))
+	})
 	// открытка — приоритет, если осталось ≥ её цены
-	for _, g := range p.gifts {
+	for _, g := range byValue {
 		if g.gift.Category == domain.GiftCard {
 			try(g)
 			break
 		}
 	}
-	byValue := slices.Clone(p.gifts)
-	slices.SortStableFunc(byValue, func(a, b scoredGift) int {
-		return cmp.Compare(b.relevance/float64(b.gift.Price), a.relevance/float64(a.gift.Price))
-	})
 	for _, g := range byValue {
 		try(g)
 	}

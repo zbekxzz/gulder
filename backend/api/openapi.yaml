@@ -551,6 +551,124 @@ paths:
               schema: { $ref: "#/components/schemas/OffersResponse" }
         "404": { $ref: "#/components/responses/Error" }
         "422": { $ref: "#/components/responses/Error" }
+  /bouquets/{id}/substitutions/validate:
+    parameters: [{ $ref: "#/components/parameters/Id" }]
+    post:
+      summary: Проверить замену цветка в букете (FR-S01, AC-3); BLOCK → 409
+      description: Ответ — только GiverView. dry_run=true — мгновенная проверка без записи в журнал.
+      operationId: validateSubstitution
+      tags: [florist, giver]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [from_flower_id, to_flower_id]
+              properties:
+                from_flower_id: { type: integer, format: int64 }
+                to_flower_id: { type: integer, format: int64 }
+                occasion_id: { type: [integer, "null"], format: int64 }
+                dry_run: { type: boolean, default: false }
+      responses:
+        "200":
+          description: Замена допустима (allow/warn)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [decision, giver_view, composition]
+                properties:
+                  decision: { type: string, enum: [allow, warn] }
+                  giver_view: { $ref: "#/components/schemas/GiverView" }
+                  composition:
+                    type: array
+                    items:
+                      type: object
+                      required: [flower_id, trade_name, stems]
+                      properties:
+                        flower_id: { type: integer, format: int64 }
+                        trade_name: { type: string }
+                        stems: { type: integer }
+        "404": { $ref: "#/components/responses/Error" }
+        "409":
+          description: Замена запрещена; details = {decision, giver_view}
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "422": { $ref: "#/components/responses/Error" }
+  /recommendations/{id}/feedback:
+    parameters: [{ $ref: "#/components/parameters/Id" }]
+    post:
+      summary: Отзыв о рекомендации; меняет профиль только этого получателя (FR-F01, AC-8)
+      operationId: createFeedback
+      tags: [giver]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                bouquet_id: { type: [integer, "null"], format: int64 }
+                rating: { type: [integer, "null"], minimum: 1, maximum: 5 }
+                liked: { type: [boolean, "null"] }
+                comment: { type: string, maxLength: 2000 }
+      responses:
+        "204": { description: Сохранено }
+        "404": { $ref: "#/components/responses/Error" }
+        "422": { $ref: "#/components/responses/Error" }
+  /admin/data-quality:
+    get:
+      summary: Качество данных (растения без ASPCA, подарки без состава, букеты без фото)
+      operationId: dataQuality
+      tags: [manager]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: array
+                  items:
+                    type: object
+                    required: [id, name]
+                    properties:
+                      id: { type: integer, format: int64 }
+                      name: { type: string }
+                      shop: { type: string }
+  /admin/analytics:
+    get:
+      summary: Агрегаты запусков, отзывов и исключений
+      operationId: analytics
+      tags: [manager]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Analytics" }
+  /admin/rules:
+    get:
+      summary: Версии Rules Engine и модели, веса ranker'а
+      operationId: rulesInfo
+      tags: [manager]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [rules_version, model_version, weights, numerology_weight, numerology_label]
+                properties:
+                  rules_version: { type: string }
+                  model_version: { type: string }
+                  weights: { type: object, additionalProperties: { type: number } }
+                  numerology_weight: { type: number }
+                  numerology_label: { type: string }
   /recipients/{id}/invites:
     post:
       summary: "P1: приглашение получателя (FR-P04)"
@@ -973,6 +1091,33 @@ components:
               discount_until: { type: [string, "null"], format: date-time }
               warnings: { type: array, items: { $ref: "#/components/schemas/GiverReason" } }
         message: { type: string }
+    GiverView:
+      type: object
+      required: [suitable, decision, reasons, missing_info]
+      properties:
+        suitable: { type: boolean }
+        decision: { type: string, enum: [allow, warn, block] }
+        reasons: { type: array, items: { $ref: "#/components/schemas/GiverReason" } }
+        missing_info: { type: array, items: { type: string } }
+    CountByKey:
+      type: object
+      required: [key, count]
+      properties:
+        key: { type: string }
+        count: { type: integer }
+    Analytics:
+      type: object
+      required: [runs_total, numerology_runs, feedback_total, avg_rating, gift_sets_total, gift_sets_llm, substitutions_blocked, runs_by_day, exclusion_codes]
+      properties:
+        runs_total: { type: integer }
+        numerology_runs: { type: integer }
+        feedback_total: { type: integer }
+        avg_rating: { type: [number, "null"] }
+        gift_sets_total: { type: integer }
+        gift_sets_llm: { type: integer }
+        substitutions_blocked: { type: integer }
+        runs_by_day: { type: array, items: { $ref: "#/components/schemas/CountByKey" } }
+        exclusion_codes: { type: array, items: { $ref: "#/components/schemas/CountByKey" } }
     Status:
       type: object
       required: [status]
