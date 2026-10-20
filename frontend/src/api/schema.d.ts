@@ -83,7 +83,8 @@ export interface paths {
     get: operations["me"];
     put?: never;
     post?: never;
-    delete?: never;
+    /** Удалить аккаунт — каскадно получатели, атрибуты, поводы, запуски, research-связка (§18.5) */
+    delete: operations["deleteAccount"];
     options?: never;
     head?: never;
     patch?: never;
@@ -538,6 +539,113 @@ export interface paths {
     get: operations["rulesInfo"];
     put?: never;
     post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/research/consent": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Состояние согласия, текущая версия и текст (RM-01) */
+    get: operations["getConsent"];
+    put?: never;
+    /** Дать согласие на исследовательский режим (RM-01) */
+    post: operations["grantConsent"];
+    /** Отозвать согласие в один шаг (RM-02) */
+    delete: operations["revokeConsent"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/research/export": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Экспорт без прямых идентификаторов и свободного текста, группы < 5 скрыты (RM-06) */
+    post: operations["exportResearch"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/research/data-dictionary": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Словарь данных экспорта (RM-06) */
+    get: operations["dataDictionary"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/research/evaluation": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Запуски офлайн-оценки (RM-04) */
+    get: operations["listEvaluations"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/research/evaluation/{run_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        run_id: number;
+      };
+      cookie?: never;
+    };
+    /** Запуск и сравнение с другими запусками на том же split (RM-05) */
+    get: operations["getEvaluation"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/admin/expert-judgements": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Экспертная разметка версии набора и список версий (RM-07) */
+    get: operations["listJudgements"];
+    put?: never;
+    /** Оценка 0–3 и причина в проверенную версию набора (не draft-*) */
+    post: operations["saveJudgement"];
     delete?: never;
     options?: never;
     head?: never;
@@ -1011,6 +1119,93 @@ export interface components {
       runs_by_day: components["schemas"]["CountByKey"][];
       exclusion_codes: components["schemas"]["CountByKey"][];
     };
+    ConsentStatus: {
+      active: boolean;
+      version: string | null;
+      /** Format: date-time */
+      granted_at: string | null;
+      current_version: string;
+      text: string;
+    };
+    ResearchExport: {
+      /** Format: int64 */
+      export_id: number;
+      data_dictionary_version: string;
+      min_group_size: number;
+      suppressed_groups: number;
+      rows: {
+        /** Format: uuid */
+        research_id: string;
+        event_month: string;
+        occasion_type: string;
+        budget_band: string;
+        model_version: string;
+        rules_version: string;
+        numerology_used: boolean;
+        bouquet_style: string | null;
+        bouquet_format: string | null;
+        rating: number | null;
+        liked: boolean | null;
+      }[];
+    };
+    ExperimentRun: {
+      /** Format: int64 */
+      id: number;
+      model_version: string;
+      dataset_version: string;
+      split_id: string;
+      seed: number;
+      params: {
+        [key: string]: unknown;
+      };
+      metrics: components["schemas"]["EvalMetrics"];
+      /** Format: date-time */
+      created_at: string;
+    };
+    EvalMetrics: {
+      "ndcg@5"?: {
+        mean?: number;
+        ci95?: number[];
+      };
+      unsafe_rate?: number;
+      unsafe_catalog_rate?: number;
+      budget_violations?: number;
+      coverage?: number;
+      ece?: number;
+      robustness?: {
+        ndcg_drop?: number;
+        ndcg_mean?: number;
+        repeats?: number;
+        drop_frac?: number;
+      };
+      test_cases?: number;
+      test_recipients?: number;
+      train_cases?: number;
+    } & {
+      [key: string]: unknown;
+    };
+    ExpertJudgement: {
+      /** Format: int64 */
+      id: number;
+      dataset_version: string;
+      case_id: string;
+      recipient_snapshot: {
+        [key: string]: unknown;
+      };
+      occasion_snapshot: {
+        [key: string]: unknown;
+      };
+      /** Format: int64 */
+      bouquet_id: number;
+      bouquet_name: string;
+      grade: number;
+      is_unsafe: boolean;
+      reason: string;
+      /** Format: int64 */
+      expert_id: number | null;
+      /** Format: date-time */
+      created_at: string;
+    };
     Status: {
       status: string;
     };
@@ -1163,6 +1358,24 @@ export interface operations {
         };
       };
       401: components["responses"]["Error"];
+    };
+  };
+  deleteAccount: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Удалён */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
     };
   };
   listRecipients: {
@@ -1980,6 +2193,228 @@ export interface operations {
           };
         };
       };
+    };
+  };
+  getConsent: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ConsentStatus"];
+        };
+      };
+    };
+  };
+  grantConsent: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          consent_version: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Согласие активно */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ConsentStatus"];
+        };
+      };
+      409: components["responses"]["Error"];
+    };
+  };
+  revokeConsent: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Отозвано */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  exportResearch: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Экспорт */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ResearchExport"];
+        };
+      };
+    };
+  };
+  dataDictionary: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            [key: string]: unknown;
+          };
+        };
+      };
+    };
+  };
+  listEvaluations: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            items: components["schemas"]["ExperimentRun"][];
+          };
+        };
+      };
+    };
+  };
+  getEvaluation: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        run_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            run: components["schemas"]["ExperimentRun"];
+            same_split: components["schemas"]["ExperimentRun"][];
+          };
+        };
+      };
+      404: components["responses"]["Error"];
+    };
+  };
+  listJudgements: {
+    parameters: {
+      query: {
+        dataset_version: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            items: components["schemas"]["ExpertJudgement"][];
+            versions: components["schemas"]["CountByKey"][];
+          };
+        };
+      };
+    };
+  };
+  saveJudgement: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          dataset_version: string;
+          case_id: string;
+          recipient_snapshot: {
+            [key: string]: unknown;
+          };
+          occasion_snapshot: {
+            [key: string]: unknown;
+          };
+          /** Format: int64 */
+          bouquet_id: number;
+          grade: number;
+          is_unsafe?: boolean;
+          reason: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Сохранено */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            /** Format: int64 */
+            id: number;
+          };
+        };
+      };
+      422: components["responses"]["Error"];
     };
   };
   createInvite: {

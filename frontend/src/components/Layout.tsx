@@ -2,7 +2,10 @@ import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../features/auth/AuthContext";
 
 const links = {
-  giver: [{ to: "/recipients", label: "Получатели" }],
+  giver: [
+    { to: "/recipients", label: "Получатели" },
+    { to: "/settings", label: "Настройки" },
+  ],
   florist: [{ to: "/florist", label: "Каталог" }],
   manager: [{ to: "/manager", label: "Управление" }],
 } as const;
